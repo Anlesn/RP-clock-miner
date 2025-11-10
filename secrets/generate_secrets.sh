@@ -1,5 +1,5 @@
 #!/bin/bash
-# Simple credential setup script
+# Simple secrets generation script
 # Allows using pre-defined or generated credentials
 
 set -e
@@ -11,7 +11,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'  # No Color
 
 echo -e "${BLUE}╔═══════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║      Bitcoin Miner Credential Setup       ║${NC}"
+echo -e "${BLUE}║     Generating Bitcoin Miner Secrets      ║${NC}"
 echo -e "${BLUE}╚═══════════════════════════════════════════╝${NC}"
 echo
 
@@ -26,11 +26,11 @@ if [ -f ".env" ]; then
     fi
 fi
 
-echo "Choose credential setup method:"
+echo "Choose secrets generation method:"
 echo
-echo "1) Use pre-defined credentials (simplest)"
+echo "1) Use pre-defined secrets (simplest)"
 echo "2) Generate secure random password"
-echo "3) Enter custom credentials"
+echo "3) Enter custom secrets"
 echo
 read -p "Select option (1-3): " choice
 
@@ -90,9 +90,28 @@ else
     fi
 fi
 
+# Get WiFi credentials (optional)
+echo
+echo -e "${BLUE}WiFi Configuration (optional)${NC}"
+echo "Enter WiFi credentials for automatic connection:"
+read -p "WiFi SSID (network name) [skip]: " WIFI_SSID
+if [ -n "$WIFI_SSID" ]; then
+    echo "WiFi Password:"
+    read -s WIFI_PASSWORD
+    echo
+    # Basic validation
+    if [ ${#WIFI_PASSWORD} -lt 8 ]; then
+        echo -e "${YELLOW}[!] Warning: WiFi password seems too short${NC}"
+    fi
+else
+    WIFI_SSID=""
+    WIFI_PASSWORD=""
+    echo -e "${YELLOW}[!] Skipping WiFi configuration${NC}"
+fi
+
 # Create .env file
 cat > .env << EOF
-# Bitcoin Miner Credentials
+# Bitcoin Miner Secrets
 # Generated: $(date)
 
 # RPC Authentication
@@ -101,6 +120,10 @@ BITCOIN_RPC_PASSWORD=$RPC_PASSWORD
 
 # Mining Rewards Address
 BITCOIN_MINING_ADDRESS=$BTC_ADDRESS
+
+# WiFi Configuration
+WIFI_SSID=$WIFI_SSID
+WIFI_PASSWORD=$WIFI_PASSWORD
 
 # Optional notifications (add if needed)
 NOTIFICATION_EMAIL=
@@ -112,15 +135,18 @@ EOF
 chmod 600 .env
 
 echo
-echo -e "${GREEN}✅ Credentials saved to .env${NC}"
+echo -e "${GREEN}✅ Secrets saved to .env${NC}"
 echo
 echo "Summary:"
 echo "  RPC User: $RPC_USER"
 echo "  RPC Pass: ${RPC_PASSWORD:0:6}***${RPC_PASSWORD: -4}"
 echo "  BTC Addr: $BTC_ADDRESS"
+if [ -n "$WIFI_SSID" ]; then
+    echo "  WiFi Net: $WIFI_SSID"
+fi
 echo
 echo -e "${YELLOW}Next steps:${NC}"
-echo "1. Run: bash security/setup_secure_config.sh"
+echo "1. Run: bash secrets/set_secrets.sh"
 echo "2. Start installation: ./install.sh"
 echo
 echo -e "${GREEN}Important: Keep .env file secure and never commit to git!${NC}"
