@@ -87,47 +87,11 @@ chmod 600 "$BITCOIN_CONF" 2>/dev/null || true
 chmod 600 "$CONFIG_FILE"
 
 echo
-# Configure WiFi if credentials provided
-if [ -n "$WIFI_SSID" ] && [ -n "$WIFI_PASSWORD" ]; then
-    echo -e "${YELLOW}[*] Configuring WiFi...${NC}"
-    
-    # Create wpa_supplicant configuration
-    WPA_CONF="/etc/wpa_supplicant/wpa_supplicant.conf"
-    if [ -w "$WPA_CONF" ] || [ -w "/etc/wpa_supplicant/" ]; then
-        cat > /tmp/wifi_config.conf << EOF
-network={
-    ssid="$WIFI_SSID"
-    psk="$WIFI_PASSWORD"
-    key_mgmt=WPA-PSK
-}
-EOF
-        
-        # Append to wpa_supplicant.conf
-        if sudo tee -a "$WPA_CONF" < /tmp/wifi_config.conf > /dev/null; then
-            echo -e "${GREEN}[✓] WiFi configured${NC}"
-            rm -f /tmp/wifi_config.conf
-            
-            # Restart WiFi
-            sudo systemctl restart wpa_supplicant
-        else
-            echo -e "${YELLOW}[!] Could not configure WiFi (may need sudo)${NC}"
-        fi
-    else
-        echo -e "${YELLOW}[!] WiFi configuration skipped (run with sudo for WiFi setup)${NC}"
-    fi
-else
-    echo -e "${YELLOW}[!] No WiFi credentials found in .env${NC}"
-fi
-
-echo
 echo -e "${GREEN}✅ Configuration complete!${NC}"
 echo
 echo "Your setup is now using:"
 echo "  RPC User: $BITCOIN_RPC_USER"
 echo "  Mining Address: $BITCOIN_MINING_ADDRESS"
-if [ -n "$WIFI_SSID" ]; then
-    echo "  WiFi Network: $WIFI_SSID"
-fi
 echo
 echo -e "${YELLOW}⚠️  Security reminders:${NC}"
 echo "  - Never share your .env file"

@@ -8,7 +8,6 @@ This directory contains scripts for managing sensitive configuration data.
 Creates `.env` file with all necessary secrets:
 - Bitcoin RPC credentials
 - Bitcoin address for rewards
-- WiFi network credentials (optional)
 
 ```bash
 bash secrets/generate_secrets.sh
@@ -22,13 +21,10 @@ Options:
 ### `set_secrets.sh`
 Applies secrets from `.env` to system configuration:
 - Updates Bitcoin Core settings
-- Configures WiFi connection (if credentials provided)
 - Sets secure file permissions
 
 ```bash
 bash secrets/set_secrets.sh
-# Or with sudo for WiFi configuration:
-sudo bash secrets/set_secrets.sh
 ```
 
 ### `backup_secrets.sh`
@@ -49,4 +45,3 @@ bash secrets/backup_secrets.sh
 - **Never commit `.env` to git**
 - **Use hardware wallet address when possible**
 - **Store backups securely**
-- **WiFi passwords are stored in plain text** - ensure .env has 600 permissions

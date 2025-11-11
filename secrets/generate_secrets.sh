@@ -90,25 +90,6 @@ else
     fi
 fi
 
-# Get WiFi credentials (optional)
-echo
-echo -e "${BLUE}WiFi Configuration (optional)${NC}"
-echo "Enter WiFi credentials for automatic connection:"
-read -p "WiFi SSID (network name) [skip]: " WIFI_SSID
-if [ -n "$WIFI_SSID" ]; then
-    echo "WiFi Password:"
-    read -s WIFI_PASSWORD
-    echo
-    # Basic validation
-    if [ ${#WIFI_PASSWORD} -lt 8 ]; then
-        echo -e "${YELLOW}[!] Warning: WiFi password seems too short${NC}"
-    fi
-else
-    WIFI_SSID=""
-    WIFI_PASSWORD=""
-    echo -e "${YELLOW}[!] Skipping WiFi configuration${NC}"
-fi
-
 # Create .env file
 cat > .env << EOF
 # Bitcoin Miner Secrets
@@ -120,10 +101,6 @@ BITCOIN_RPC_PASSWORD=$RPC_PASSWORD
 
 # Mining Rewards Address
 BITCOIN_MINING_ADDRESS=$BTC_ADDRESS
-
-# WiFi Configuration
-WIFI_SSID=$WIFI_SSID
-WIFI_PASSWORD=$WIFI_PASSWORD
 
 # Optional notifications (add if needed)
 NOTIFICATION_EMAIL=
@@ -141,9 +118,6 @@ echo "Summary:"
 echo "  RPC User: $RPC_USER"
 echo "  RPC Pass: ${RPC_PASSWORD:0:6}***${RPC_PASSWORD: -4}"
 echo "  BTC Addr: $BTC_ADDRESS"
-if [ -n "$WIFI_SSID" ]; then
-    echo "  WiFi Net: $WIFI_SSID"
-fi
 echo
 echo -e "${YELLOW}Next steps:${NC}"
 echo "1. Run: bash secrets/set_secrets.sh"
