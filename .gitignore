@@ -1,0 +1,54 @@
+# Bitcoin Core data (never commit blockchain data!)
+.bitcoin/
+*.dat
+*.log
+
+# Compiled binaries
+cpuminer
+cpuminer_last_update
+*.o
+*.a
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+/var/log/
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Private keys and wallets - NEVER commit these!
+wallet.dat
+*.key
+*.pem
+private_keys/
+
+# Configuration with passwords (use config.json.example instead)
+# Uncomment if you want to exclude actual config
+# miner/config.json
+
+# Environment files with secrets
+.env
+.env.local
+.env.production
