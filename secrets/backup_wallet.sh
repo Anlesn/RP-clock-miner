@@ -32,21 +32,7 @@ if [ -f "../.env" ]; then
     echo -e "${GREEN}[✓] Backed up .env file${NC}"
 fi
 
-# 2. Backup Bitcoin wallet if using Bitcoin Core
-if command -v bitcoin-cli &> /dev/null; then
-    if bitcoin-cli listwallets &> /dev/null; then
-        WALLETS=$(bitcoin-cli listwallets | grep -o '"[^"]*"' | tr -d '"')
-        for wallet in $WALLETS; do
-            if [[ $wallet == *"rpi_miner"* ]]; then
-                echo -e "${YELLOW}[*] Backing up Bitcoin Core wallet: $wallet${NC}"
-                bitcoin-cli -rpcwallet="$wallet" backupwallet "$BACKUP_DIR/${wallet}.dat" 2>/dev/null || true
-                BACKUP_ITEMS+=("Bitcoin Core wallet: $wallet")
-            fi
-        done
-    fi
-fi
-
-# 3. Backup config files
+# 2. Backup config files
 if [ -f "../miner/config.json" ]; then
     cp ../miner/config.json "$BACKUP_DIR/miner_config.json"
     BACKUP_ITEMS+=("Miner configuration")
@@ -72,8 +58,8 @@ IMPORTANT SECURITY INFORMATION:
 2. Recovery Steps:
    a) Install RP-clock-miner on new system
    b) Copy .env file to project root
-   c) Run: bash security/setup_secure_config.sh
-   d) For Bitcoin Core wallet: bitcoin-cli loadwallet "path/to/wallet.dat"
+   c) Run: bash secrets/set_secrets.sh
+   d) Start mining: ./miner/run_miner.sh
 
 3. Security Best Practices:
    - Store this backup encrypted on multiple devices
