@@ -175,7 +175,6 @@ echo "  ✓ Systemd service with automatic restart"
 echo "  ✓ Power failure recovery"
 echo "  ✓ Health monitoring (every 5 minutes)"
 echo "  ✓ Log rotation (7 days)"
-echo "  ✓ Watchdog monitoring"
 echo
 echo -e "${YELLOW}Commands:${NC}"
 echo "  Start now:        sudo systemctl start rp-clock-miner"
