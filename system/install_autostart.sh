@@ -28,6 +28,7 @@ chmod +x "$PROJECT_DIR/secrets"/*.sh
 # 2. Update paths in service file
 echo -e "${YELLOW}[*] Configuring systemd service...${NC}"
 sed -e "s|/home/pi/RP-clock-miner|$PROJECT_DIR|g" \
+    -e "s|/home/pi/.bitcoin|$HOME/.bitcoin|g" \
     -e "s|User=pi|User=$USER|g" \
     -e "s|Group=pi|Group=$USER|g" \
     "$PROJECT_DIR/system/autostart.service" > /tmp/rp-clock-miner.service
