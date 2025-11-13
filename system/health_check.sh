@@ -32,10 +32,10 @@ wait_for_network() {
     local max_attempts=30
     local attempt=1
     
-    while ! ping -c 1 google.com > /dev/null 2>&1; do
+    while ! ping -c 1 -W 1 google.com > /dev/null 2>&1 && ! ping -c 1 -W 1 8.8.8.8 > /dev/null 2>&1; do
         if [ $attempt -ge $max_attempts ]; then
-            log "ERROR: Network not available after $max_attempts attempts"
-            return 1
+            log "WARNING: Network not available after $max_attempts attempts (continuing anyway)"
+            return 0  # Changed from 1 to 0 - don't fail if no network
         fi
         log "Network not ready, attempt $attempt/$max_attempts"
         sleep 2

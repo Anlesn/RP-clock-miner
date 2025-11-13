@@ -22,6 +22,8 @@ USER=$(whoami)
 # 1. Make all scripts executable
 echo -e "${YELLOW}[*] Setting script permissions...${NC}"
 chmod +x "$PROJECT_DIR/system"/*.sh
+chmod +x "$PROJECT_DIR/miner"/*.sh
+chmod +x "$PROJECT_DIR/secrets"/*.sh
 
 # 2. Update paths in service file
 echo -e "${YELLOW}[*] Configuring systemd service...${NC}"

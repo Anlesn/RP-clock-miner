@@ -2,7 +2,9 @@
 # Monitoring script that runs via cron to ensure everything is healthy
 # Add to crontab: */5 * * * * /home/pi/RP-clock-miner/system/monitor.sh
 
-PROJECT_DIR="/home/pi/RP-clock-miner"
+# Get script directory and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 LOG_FILE="/var/log/rp-clock-miner-monitor.log"
 ALERT_FILE="/tmp/rp-miner-alert"
 
