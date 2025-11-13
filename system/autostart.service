@@ -1,0 +1,85 @@
+# systemd service file for automatic miner startup with enhanced reliability
+# Copy this file to /etc/systemd/system/rp-clock-miner.service
+# Then run:
+# sudo systemctl daemon-reload
+# sudo systemctl enable rp-clock-miner.service
+# sudo systemctl start rp-clock-miner.service
+
+[Unit]
+# Service description
+Description=Bitcoin Solo Miner for Raspberry Pi - Decorative Clock Display
+# Documentation=https://github.com/anlesn/RP-clock-miner
+
+# Dependencies and ordering
+# Wait for network to be fully online (not just interfaces up)
+After=network-online.target
+Wants=network-online.target
+
+# Also wait for system time to be synchronized (important for Bitcoin)
+After=systemd-time-wait-sync.service
+Wants=systemd-time-wait-sync.service
+
+# Optional: start after display manager if available
+# This is a "wants" relationship, not a hard requirement
+After=graphical.target
+# The service will start even if graphical.target is not reached
+
+[Service]
+# User account to run the service
+User=pi
+Group=pi
+
+# Working directory
+WorkingDirectory=/home/pi/RP-clock-miner
+
+# Environment file (contains secrets)
+EnvironmentFile=-/home/pi/RP-clock-miner/.env
+
+# Path to startup script
+ExecStart=/home/pi/RP-clock-miner/system/start.sh
+
+# Pre-start health check
+ExecStartPre=/home/pi/RP-clock-miner/system/health_check.sh
+
+# Restart configuration for maximum reliability
+Restart=always
+RestartSec=30
+# Restart even if the service exits cleanly
+RestartForceExitStatus=0
+# Maximum restart attempts in a time window
+StartLimitInterval=600
+StartLimitBurst=5
+
+# Kill settings
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=60
+
+# Security and resource limits
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/pi/RP-clock-miner
+ReadWritePaths=/home/pi/.bitcoin
+ReadWritePaths=/var/log
+# CPU and memory limits to prevent system overload
+CPUQuota=80%
+MemoryMax=2G
+# Nice level (priority)
+Nice=10
+
+# IO scheduling (best effort, low priority)
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rp-clock-miner
+
+# Additional safety features
+# Don't dump core files
+LimitCORE=0
+
+[Install]
+WantedBy=multi-user.target
