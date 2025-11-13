@@ -126,5 +126,9 @@ echo
 echo "Your node will use pruned mode (~5GB storage)"
 echo "Instead of 500+ GB, only 5GB will be used"
 echo
+echo -e "${YELLOW}Next steps:${NC}"
+echo "1. (Optional, not implemeted yet) Install Python dependencies: pip3 install -r display/requirements.txt"
+echo "2. Set up autostart: bash system/install_autostart.sh"
+echo
 echo "Happy solo mining! May the odds be ever in your favor 🎰"
 echo "Remember: chances are minimal, but they exist!"

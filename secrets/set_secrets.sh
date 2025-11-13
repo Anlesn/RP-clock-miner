@@ -98,3 +98,7 @@ echo "  - Never share your .env file"
 echo "  - Keep backups of your configuration"
 echo "  - Use hardware wallet for large amounts"
 echo "  - Enable 2FA on your RPi if possible"
+echo
+echo -e "${YELLOW}Next steps:${NC}"
+echo "1. (optional) Create backup: bash secrets/backup_wallet.sh"
+echo "2. Continue with Bitcoin Core setup: bash node/setup_node.sh"

@@ -128,5 +128,9 @@ echo "3. Delete unencrypted backup:"
 echo "   rm -rf $BACKUP_DIR"
 echo
 echo -e "${YELLOW}Remember: Your wallet is only as secure as your backup!${NC}"
+echo
+echo -e "${YELLOW}Next steps:${NC}"
+echo "1. Secure this backup in multiple locations"
+echo "2. Continue with: bash node/setup_node.sh"
 
 

@@ -184,5 +184,11 @@ echo "  Verify setup:     ./system/verify_autostart.sh"
 echo
 echo -e "${GREEN}Your miner will now automatically start on boot!${NC}"
 echo -e "${GREEN}It will recover from power failures and crashes.${NC}"
+echo
+echo -e "${YELLOW}Next steps:${NC}"
+echo "1. Start the miner: sudo systemctl start rp-clock-miner"
+echo "2. Monitor logs: journalctl -u rp-clock-miner -f"
+echo
+echo "Setup complete! Your Bitcoin solo miner is ready to run 24/7."
 
 

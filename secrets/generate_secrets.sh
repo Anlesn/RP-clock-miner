@@ -120,7 +120,6 @@ echo "  RPC Pass: ${RPC_PASSWORD:0:6}***${RPC_PASSWORD: -4}"
 echo "  BTC Addr: $BTC_ADDRESS"
 echo
 echo -e "${YELLOW}Next steps:${NC}"
-echo "1. Run: bash secrets/set_secrets.sh"
-echo "2. Start installation: ./install.sh"
+echo "1. Apply these credentials: bash secrets/set_secrets.sh"
 echo
 echo -e "${GREEN}Important: Keep .env file secure and never commit to git!${NC}"
