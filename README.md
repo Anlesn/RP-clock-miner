@@ -64,7 +64,7 @@ A decorative Bitcoin solo mining setup for Raspberry Pi 5 that doubles as a desk
 - Git
 
 ### External Dependencies
-- **Bitcoin Core** v25.0+ - Full node software (downloaded during setup)
+- **Bitcoin Core** (latest version) - Full node software (auto-downloaded during setup)
 - **cpuminer-opt** - CPU mining software ([JayDDee/cpuminer-opt](https://github.com/JayDDee/cpuminer-opt))
 - **Python Libraries** (via pip):
   - `requests` - API calls for BTC price and mining stats

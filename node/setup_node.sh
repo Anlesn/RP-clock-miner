@@ -26,20 +26,67 @@ sudo apt update
 sudo apt upgrade -y
 
 echo "[*] Installing dependencies..."
-# Install all required packages:
+# Install all required packages (except Bitcoin Core):
 sudo apt install -y \
-    bitcoind \              # Bitcoin Core daemon
-    htop \                  # System monitoring (CPU, memory)
-    python3-pip \           # Python package manager for display
-    git \                   # To clone cpuminer source code
-    build-essential \       # C/C++ compilers for building cpuminer
-    autoconf \              # Automatic configuration tools
-    automake \              # Makefile generation tools
-    libssl-dev \            # Cryptographic libraries
-    libcurl4-openssl-dev \ # HTTP library for pool communication
-    libjansson-dev \        # JSON parser for configuration
-    screen \                # Run processes in background
-    bc                      # Calculator for shell scripts
+    htop \
+    python3-pip \
+    git \
+    build-essential \
+    autoconf \
+    automake \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    libjansson-dev \
+    libgmp-dev \
+    zlib1g-dev \
+    libnuma-dev \
+    screen \
+    curl \
+    wget \
+    jq \
+    bc
+
+echo "[*] Installing Bitcoin Core..."
+# Get latest Bitcoin Core version
+echo "[*] Checking latest Bitcoin Core version..."
+LATEST_VERSION=$(curl -s https://api.github.com/repos/bitcoin/bitcoin/releases/latest | jq -r '.tag_name' | sed 's/v//')
+if [ -z "$LATEST_VERSION" ]; then
+    echo "[!] Failed to get latest version, using fallback"
+    BITCOIN_VERSION="28.1"
+else
+    BITCOIN_VERSION="$LATEST_VERSION"
+fi
+echo "[*] Installing Bitcoin Core ${BITCOIN_VERSION}..."
+
+# Download Bitcoin Core for ARM64
+BITCOIN_URL="https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-aarch64-linux-gnu.tar.gz"
+BITCOIN_SHA256="https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS"
+
+cd /tmp
+echo "[*] Downloading Bitcoin Core ${BITCOIN_VERSION}..."
+wget -q --show-progress "$BITCOIN_URL"
+
+# Verify checksum
+echo "[*] Verifying download integrity..."
+wget -q "$BITCOIN_SHA256"
+if grep -q $(sha256sum bitcoin-${BITCOIN_VERSION}-aarch64-linux-gnu.tar.gz | awk '{print $1}') SHA256SUMS; then
+    echo "[✓] Checksum verified"
+else
+    echo "[!] Checksum verification failed! Aborting."
+    exit 1
+fi
+
+# Extract and install
+echo "[*] Installing Bitcoin Core..."
+tar -xzf bitcoin-${BITCOIN_VERSION}-aarch64-linux-gnu.tar.gz
+sudo cp -r bitcoin-${BITCOIN_VERSION}/bin/* /usr/local/bin/
+sudo chmod +x /usr/local/bin/bitcoin*
+
+# Clean up
+rm -rf bitcoin-${BITCOIN_VERSION}*
+cd -
+
+echo "[✓] Bitcoin Core ${BITCOIN_VERSION} installed"
 
 echo "[*] Detecting system resources..."
 # Detect RAM size
