@@ -14,12 +14,9 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Log file
-LOG_FILE="/var/log/rp-clock-miner.log"
-
-# Function to log with timestamp
+# Function to log with timestamp (logs go to journalctl via systemd)
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
 # Trap to handle cleanup on exit
@@ -76,8 +73,8 @@ fi
 
 log "Bitcoin Core is ready"
 
-# 4. Load display configuration
-source /tmp/rp-miner-status 2>/dev/null || true
+# 4. Use display configuration from health_check environment variables
+# DISPLAY_TYPE is exported by health_check.sh if available
 
 # 5. Start display if available
 if [ "$DISPLAY_TYPE" != "none" ] && [ -f "$PROJECT_DIR/display/display.py" ]; then
@@ -149,9 +146,7 @@ log "Available memory: ${available_mem}GB"
 log "Starting CPU miner..."
 cd "$PROJECT_DIR/miner"
 
-# Create a PID file
-echo $$ > /var/run/rp-clock-miner.pid
-
 # Run miner in foreground so systemd can track it
 # The miner script will handle its own error recovery
+# No PID file needed - systemd tracks the process
 exec ./run_miner.sh

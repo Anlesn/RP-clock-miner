@@ -13,12 +13,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Log file for health checks
-LOG_FILE="/var/log/rp-clock-miner-health.log"
-
-# Function to log with timestamp
+# Function to log with timestamp (logs go to journalctl via systemd)
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
 # Function to check if a process is running
@@ -161,14 +158,6 @@ cleanup_stale_processes() {
         pkill -9 -f "cpuminer.*defunct"
     fi
     
-    # Remove stale PID files
-    if [ -f /var/run/rp-clock-miner.pid ]; then
-        local pid=$(cat /var/run/rp-clock-miner.pid)
-        if ! kill -0 "$pid" 2>/dev/null; then
-            log "Removing stale PID file"
-            rm -f /var/run/rp-clock-miner.pid
-        fi
-    fi
 }
 
 # Main health check function
@@ -206,14 +195,12 @@ main() {
     # 6. Check display
     check_display
     
-    # 7. Create status file for the main script
-    cat > /tmp/rp-miner-status << EOF
-HEALTH_CHECK_TIME=$(date '+%Y-%m-%d %H:%M:%S')
-NETWORK_STATUS=OK
-BITCOIN_CORE_STATUS=OK
-DISPLAY_TYPE=$DISPLAY_TYPE
-TEMPERATURE=$(vcgencmd measure_temp | grep -o '[0-9]*\.[0-9]*')
-EOF
+    # 7. Export status as environment variables for the main script
+    export HEALTH_CHECK_TIME=$(date '+%Y-%m-%d %H:%M:%S')
+    export NETWORK_STATUS=OK
+    export BITCOIN_CORE_STATUS=OK
+    export DISPLAY_TYPE=$DISPLAY_TYPE
+    export TEMPERATURE=$(vcgencmd measure_temp | grep -o '[0-9]*\.[0-9]*')
     
     log "Health check completed successfully"
     log "============================================"

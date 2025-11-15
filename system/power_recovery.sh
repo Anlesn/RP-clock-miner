@@ -2,10 +2,9 @@
 # Power failure recovery script
 # Handles filesystem checks and recovery after unexpected shutdown
 
-LOG_FILE="/var/log/rp-clock-miner-recovery.log"
-
+# Function to log with timestamp (logs go to journalctl via systemd)
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
 log "============================================"

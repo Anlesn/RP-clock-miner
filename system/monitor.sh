@@ -5,12 +5,11 @@
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-LOG_FILE="/var/log/rp-clock-miner-monitor.log"
 ALERT_FILE="/tmp/rp-miner-alert"
 
-# Function to log
+# Function to log (logs go to syslog/journalctl)
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
+    logger -t rp-clock-miner-monitor "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
 # Function to send alert (implement email/telegram if configured)
@@ -73,21 +72,6 @@ hashrate=$(curl -s http://127.0.0.1:4048/summary 2>/dev/null | grep -o '"KHS":[0
 
 log "Status: Blocks=$blocks, Hashrate=${hashrate}KH/s, Temp=${temp}°C, Disk=${disk_usage}%"
 
-# Rotate log if too large (10MB)
-if [ -f "$LOG_FILE" ]; then
-    # Get file size in bytes (portable way for Linux and macOS)
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
-        log_size=$(stat -f%z "$LOG_FILE")
-    else
-        # Linux
-        log_size=$(stat -c%s "$LOG_FILE")
-    fi
-    
-    if [ "$log_size" -gt 10485760 ]; then
-        mv "$LOG_FILE" "${LOG_FILE}.old"
-        touch "$LOG_FILE"
-    fi
-fi
+# Log rotation is handled by journalctl automatically
 
 
