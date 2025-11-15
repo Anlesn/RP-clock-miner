@@ -6,6 +6,13 @@
 # This ensures we don't continue with a broken setup
 set -e
 
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'  # No Color
+
 echo "╔════════════════════════════════════════════╗"
 echo "║     Bitcoin Solo Mining Node Setup         ║"
 echo "║         for Raspberry Pi 5                 ║"
@@ -112,11 +119,6 @@ fi
 
 echo "Setting swap size: $SWAP_SIZE"
 
-# Optimize bitcoin.conf based on available RAM
-echo "[*] Optimizing Bitcoin Core configuration..."
-sed -i "s/dbcache=.*/dbcache=$DB_CACHE/" ~/.bitcoin/bitcoin.conf
-echo "[✓] Set dbcache to ${DB_CACHE}MB for optimal performance"
-
 echo "[*] Creating Bitcoin data directory..."
 # Create Bitcoin data directory if it doesn't exist
 # -p flag creates parent directories as needed
@@ -125,6 +127,11 @@ mkdir -p ~/.bitcoin
 # Copy our configuration file to standard location
 # $(dirname "$0") is the directory where this script is located
 cp "$(dirname "$0")/bitcoin.conf" ~/.bitcoin/bitcoin.conf
+
+# Optimize bitcoin.conf based on available RAM
+echo "[*] Optimizing Bitcoin Core configuration..."
+sed -i "s/dbcache=.*/dbcache=$DB_CACHE/" ~/.bitcoin/bitcoin.conf
+echo "[✓] Set dbcache to ${DB_CACHE}MB for optimal performance"
 
 # Check if swap file already exists
 if ! grep -q "swapfile" /etc/fstab; then
@@ -174,7 +181,7 @@ echo "Your node will use pruned mode (~5GB storage)"
 echo "Instead of 500+ GB, only 5GB will be used"
 echo
 echo -e "${YELLOW}Next steps:${NC}"
-echo "1. (Optional, not implemeted yet) Install Python dependencies: pip3 install -r display/requirements.txt"
+echo "1. (Optional, not implemented yet) Install Python dependencies: pip3 install -r display/requirements.txt"
 echo "2. Set up autostart: bash system/install_autostart.sh"
 echo
 echo "Happy solo mining! May the odds be ever in your favor 🎰"
