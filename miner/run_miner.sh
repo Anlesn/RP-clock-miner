@@ -55,14 +55,17 @@ if bitcoin-cli getblockchaininfo >/dev/null 2>&1; then
     # Get current blockchain sync status
     BLOCKS=$(bitcoin-cli getblockcount)
     HEADERS=$(bitcoin-cli getblockchaininfo | grep -o '"headers":[[:space:]]*[0-9]*' | grep -o '[0-9]*$')
-    PROGRESS=$(bitcoin-cli getblockchaininfo | grep -o '"verificationprogress":[[:space:]]*[0-9.]*' | grep -o '[0-9.]*$')
     
-    # Calculate sync percentage (multiply by 100 and remove decimals)
-    # Check if bc is available, fallback to awk if not
-    if command -v bc >/dev/null 2>&1; then
-        PROGRESS_PCT=$(echo "$PROGRESS * 100" | bc | cut -d'.' -f1)
+    # Calculate sync percentage from blocks/headers ratio
+    # This is more reliable than verificationprogress which can be in scientific notation
+    if [ "$HEADERS" -gt 0 ]; then
+        if command -v bc >/dev/null 2>&1; then
+            PROGRESS_PCT=$(echo "scale=2; $BLOCKS * 100 / $HEADERS" | bc | cut -d'.' -f1)
+        else
+            PROGRESS_PCT=$(awk "BEGIN {printf \"%.0f\", ($BLOCKS / $HEADERS) * 100}")
+        fi
     else
-        PROGRESS_PCT=$(awk "BEGIN {printf \"%.0f\", $PROGRESS * 100}")
+        PROGRESS_PCT=0
     fi
     
     echo -e "${GREEN}[✓] Bitcoin Core is running${NC}"
@@ -90,8 +93,13 @@ if bitcoin-cli getblockchaininfo >/dev/null 2>&1; then
         fi
         
         echo ""
-        echo -e "${RED}[!] Cannot mine until fully synced. Exiting...${NC}"
-        exit 1
+        echo -e "${YELLOW}[!] WARNING: Mining before full sync is pointless - blocks will be rejected${NC}"
+        echo -e "${YELLOW}    Miner will start anyway and automatically work properly after sync completes.${NC}"
+        echo -e "${BLUE}    You can monitor sync progress: bitcoin-cli getblockchaininfo${NC}"
+        echo ""
+        
+        # Small delay to show the message
+        sleep 3
     fi
 else
     echo -e "${RED}[!] Bitcoin Core is not running!${NC}"
