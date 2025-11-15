@@ -57,7 +57,7 @@ KillSignal=SIGTERM
 TimeoutStopSec=60
 
 # Security and resource limits
-PrivateTmp=yes
+# PrivateTmp=yes
 # Simplified security - removed strict protections that cause namespace issues
 # ProtectSystem=strict
 # ProtectHome=read-only
