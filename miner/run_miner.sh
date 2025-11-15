@@ -257,7 +257,11 @@ echo ""
 BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
 HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[0-9]*' | grep -o '[0-9]*' || echo "0")
 
-if [ "$BLOCKS" -lt "$HEADERS" ] && [ "$HEADERS" -gt 0 ]; then
+# Ensure variables are valid integers
+BLOCKS=${BLOCKS:-0}
+HEADERS=${HEADERS:-0}
+
+if [ "$HEADERS" -gt 0 ] && [ "$BLOCKS" -lt "$HEADERS" ]; then
     echo "[INFO] Blockchain is syncing. Monitoring progress..."
     echo ""
     
@@ -282,7 +286,11 @@ if [ "$BLOCKS" -lt "$HEADERS" ] && [ "$HEADERS" -gt 0 ]; then
             BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
             HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[0-9]*' | grep -o '[0-9]*' || echo "0")
             
-            if [ "$BLOCKS" -lt "$HEADERS" ]; then
+            # Ensure variables are valid
+            BLOCKS=${BLOCKS:-0}
+            HEADERS=${HEADERS:-0}
+            
+            if [ "$HEADERS" -gt 0 ] && [ "$BLOCKS" -lt "$HEADERS" ]; then
                 PROGRESS=$((BLOCKS * 100 / HEADERS))
                 BLOCKS_LEFT=$((HEADERS - BLOCKS))
                 BLOCKS_GAINED=$((BLOCKS - LAST_BLOCKS))
