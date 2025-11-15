@@ -58,7 +58,12 @@ if bitcoin-cli getblockchaininfo >/dev/null 2>&1; then
     PROGRESS=$(bitcoin-cli getblockchaininfo | grep -o '"verificationprogress":[[:space:]]*[0-9.]*' | grep -o '[0-9.]*$')
     
     # Calculate sync percentage (multiply by 100 and remove decimals)
-    PROGRESS_PCT=$(echo "$PROGRESS * 100" | bc | cut -d'.' -f1)
+    # Check if bc is available, fallback to awk if not
+    if command -v bc >/dev/null 2>&1; then
+        PROGRESS_PCT=$(echo "$PROGRESS * 100" | bc | cut -d'.' -f1)
+    else
+        PROGRESS_PCT=$(awk "BEGIN {printf \"%.0f\", $PROGRESS * 100}")
+    fi
     
     echo -e "${GREEN}[✓] Bitcoin Core is running${NC}"
     echo -e "    Blocks: $BLOCKS / $HEADERS (${PROGRESS_PCT}% synced)"
