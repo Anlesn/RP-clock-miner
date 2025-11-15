@@ -29,6 +29,7 @@ chmod +x "$PROJECT_DIR/secrets"/*.sh
 echo -e "${YELLOW}[*] Configuring systemd service...${NC}"
 sed -e "s|PROJECT_DIR_PLACEHOLDER|$PROJECT_DIR|g" \
     -e "s|USER_PLACEHOLDER|$USER|g" \
+    -e "s|HOME_DIR_PLACEHOLDER|$HOME|g" \
     "$PROJECT_DIR/system/autostart.service" > /tmp/rp-clock-miner.service
 
 # 3. Install systemd service

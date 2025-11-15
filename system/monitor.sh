@@ -1,6 +1,6 @@
 #!/bin/bash
 # Monitoring script that runs via cron to ensure everything is healthy
-# Add to crontab: */5 * * * * /home/pi/RP-clock-miner/system/monitor.sh
+# Add to crontab: */5 * * * * /home/user/RP-clock-miner/system/monitor.sh
 
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

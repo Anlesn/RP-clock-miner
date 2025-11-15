@@ -58,10 +58,13 @@ TimeoutStopSec=60
 
 # Security and resource limits
 PrivateTmp=yes
+# Simplified security - removed strict protections that cause namespace issues
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/pi/RP-clock-miner
-ReadWritePaths=/home/pi/.bitcoin
+# Note: ReadWritePaths may cause namespace issues on some systems
+# Uncomment and customize if needed for additional security:
+ReadWritePaths=PROJECT_DIR_PLACEHOLDER
+ReadWritePaths=HOME_DIR_PLACEHOLDER/.bitcoin
 ReadWritePaths=/var/log
 # CPU and memory limits to prevent system overload
 CPUQuota=80%
