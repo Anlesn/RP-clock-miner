@@ -28,6 +28,28 @@ else
     echo "[!] Warning: Not running on Raspberry Pi. Some optimizations may not apply."
 fi
 
+# Check CPU architecture
+ARCH=$(uname -m)
+echo "[*] Detected architecture: $ARCH"
+
+# Verify it's ARM64 (aarch64)
+if [ "$ARCH" != "aarch64" ] && [ "$ARCH" != "arm64" ]; then
+    echo -e "${RED}[!] ERROR: This script is designed for ARM64 (aarch64) architecture${NC}"
+    echo -e "${RED}    Detected: $ARCH${NC}"
+    echo -e "${YELLOW}    Bitcoin Core ARM64 binaries won't work on this system.${NC}"
+    echo
+    echo "Options:"
+    echo "  1. If you're on x86_64, modify the script to download x86_64 binaries"
+    echo "  2. Use the official Bitcoin Core installation for your platform"
+    echo
+    read -p "Continue anyway? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Installation cancelled."
+        exit 1
+    fi
+fi
+
 echo "[*] Updating system packages..."
 sudo apt update
 sudo apt upgrade -y
@@ -65,8 +87,24 @@ else
 fi
 echo "[*] Installing Bitcoin Core ${BITCOIN_VERSION}..."
 
-# Download Bitcoin Core for ARM64
-BITCOIN_URL="https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-aarch64-linux-gnu.tar.gz"
+# Determine correct Bitcoin Core binary for architecture
+case "$ARCH" in
+    aarch64|arm64)
+        BITCOIN_ARCH="aarch64-linux-gnu"
+        echo "[*] Using ARM64 binary"
+        ;;
+    x86_64)
+        BITCOIN_ARCH="x86_64-linux-gnu"
+        echo "[*] Using x86_64 binary"
+        ;;
+    *)
+        echo -e "${RED}[!] Unsupported architecture: $ARCH${NC}"
+        exit 1
+        ;;
+esac
+
+# Download Bitcoin Core for detected architecture
+BITCOIN_URL="https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/bitcoin-${BITCOIN_VERSION}-${BITCOIN_ARCH}.tar.gz"
 BITCOIN_SHA256="https://bitcoincore.org/bin/bitcoin-core-${BITCOIN_VERSION}/SHA256SUMS"
 
 cd /tmp
@@ -76,16 +114,19 @@ wget -q --show-progress "$BITCOIN_URL"
 # Verify checksum
 echo "[*] Verifying download integrity..."
 wget -q "$BITCOIN_SHA256"
-if grep -q $(sha256sum bitcoin-${BITCOIN_VERSION}-aarch64-linux-gnu.tar.gz | awk '{print $1}') SHA256SUMS; then
+DOWNLOADED_HASH=$(sha256sum bitcoin-${BITCOIN_VERSION}-${BITCOIN_ARCH}.tar.gz | awk '{print $1}')
+if grep -q "$DOWNLOADED_HASH" SHA256SUMS; then
     echo "[✓] Checksum verified"
 else
-    echo "[!] Checksum verification failed! Aborting."
+    echo -e "${RED}[!] Checksum verification failed! Aborting.${NC}"
+    echo "Expected hash to be in SHA256SUMS file"
+    echo "Downloaded file hash: $DOWNLOADED_HASH"
     exit 1
 fi
 
 # Extract and install
 echo "[*] Installing Bitcoin Core..."
-tar -xzf bitcoin-${BITCOIN_VERSION}-aarch64-linux-gnu.tar.gz
+tar -xzf bitcoin-${BITCOIN_VERSION}-${BITCOIN_ARCH}.tar.gz
 sudo cp -r bitcoin-${BITCOIN_VERSION}/bin/* /usr/local/bin/
 sudo chmod +x /usr/local/bin/bitcoin*
 
