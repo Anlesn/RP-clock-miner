@@ -114,9 +114,6 @@ Choose one of three options:
 ```bash
 # Apply configuration
 bash secrets/set_secrets.sh
-
-# Create encrypted backup
-bash secrets/backup_wallet.sh
 ```
 
 ### 3. Install Components
@@ -232,7 +229,6 @@ RP-clock-miner/
 ├── secrets/             # Security tools
 │   ├── generate_secrets.sh    # Credential generator
 │   ├── set_secrets.sh        # Apply configuration
-│   ├── backup_wallet.sh      # Backup utility
 │   └── README.md            # Security guide
 └── system/              # System integration
     ├── autostart.service     # Systemd service
@@ -278,7 +274,6 @@ RP-clock-miner/
 ### Configuration Flow
 - `generate_secrets.sh` → Creates `.env` file
 - `set_secrets.sh` → Applies `.env` to `bitcoin.conf` and `config.json`
-- `backup_wallet.sh` → Creates encrypted backup of credentials
 
 ## ⚙️ Configuration
 
@@ -356,22 +351,14 @@ bitcoin-cli getblockchaininfo
 curl http://127.0.0.1:4048/summary
 ```
 
-### Backup Commands
-```bash
-# Create backup
-bash secrets/backup_wallet.sh
-
-# Encrypt backup
-tar -czf - ~/rpi_miner_backup_* | openssl enc -aes-256-cbc -salt -out backup.enc
-```
-
 ## 🛡️ Security Best Practices
 
-1. **Use Hardware Wallet**: Store significant amounts offline
-2. **Regular Backups**: Test recovery process with small amounts
-3. **Secure .env File**: Never commit to git
+1. **Use Hardware Wallet Address**: Mining rewards go directly to your external address
+2. **Backup External Wallet**: This project doesn't store wallet keys - backup your external wallet properly
+3. **Secure .env File**: Never commit to git (contains RPC credentials)
 4. **Update System**: Keep software up to date
 5. **Monitor Temperature**: Prevent thermal damage
+6. **RPC Credentials**: Can be regenerated anytime if compromised
 
 ## ⚠️ Important Notes
 
