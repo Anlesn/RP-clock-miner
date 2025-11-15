@@ -254,10 +254,19 @@ echo "[INFO] cpuminer started (PID: $CPUMINER_PID)"
 echo ""
 
 # Monitor sync status and RPC health
-BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
-HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[0-9]*' | grep -o '[0-9]*' || echo "0")
+# Use jq for reliable JSON parsing, fallback to grep if jq not available
+if command -v jq >/dev/null 2>&1; then
+    BLOCKCHAIN_INFO=$(bitcoin-cli getblockchaininfo 2>/dev/null || echo '{}')
+    BLOCKS=$(echo "$BLOCKCHAIN_INFO" | jq -r '.blocks // 0')
+    HEADERS=$(echo "$BLOCKCHAIN_INFO" | jq -r '.headers // 0')
+else
+    BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null)
+    HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[[:space:]]*[0-9]*' | grep -o '[0-9]*$')
+fi
 
-# Ensure variables are valid integers
+# Ensure variables are valid integers (remove any whitespace/newlines)
+BLOCKS=$(echo "$BLOCKS" | tr -d '[:space:]')
+HEADERS=$(echo "$HEADERS" | tr -d '[:space:]')
 BLOCKS=${BLOCKS:-0}
 HEADERS=${HEADERS:-0}
 
@@ -283,10 +292,19 @@ if [ "$HEADERS" -gt 0 ] && [ "$BLOCKS" -lt "$HEADERS" ]; then
         else
             RPC_ERROR_COUNT=0
             
-            BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
-            HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[0-9]*' | grep -o '[0-9]*' || echo "0")
+            # Get current sync status
+            if command -v jq >/dev/null 2>&1; then
+                BLOCKCHAIN_INFO=$(bitcoin-cli getblockchaininfo 2>/dev/null || echo '{}')
+                BLOCKS=$(echo "$BLOCKCHAIN_INFO" | jq -r '.blocks // 0')
+                HEADERS=$(echo "$BLOCKCHAIN_INFO" | jq -r '.headers // 0')
+            else
+                BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null)
+                HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[[:space:]]*[0-9]*' | grep -o '[0-9]*$')
+            fi
             
-            # Ensure variables are valid
+            # Clean and validate
+            BLOCKS=$(echo "$BLOCKS" | tr -d '[:space:]')
+            HEADERS=$(echo "$HEADERS" | tr -d '[:space:]')
             BLOCKS=${BLOCKS:-0}
             HEADERS=${HEADERS:-0}
             
