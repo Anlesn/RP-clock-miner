@@ -236,11 +236,8 @@ echo "────────────────────────�
 # --api-bind: API for monitoring on port 4048
 # Note: Using 'nice' for process priority instead of deprecated --cpu-priority
 
-# Start cpuminer with intelligent log filtering
-# Filter "json_rpc_call failed" only when it's expected (error -10 during sync)
-# Show all other errors (connection refused, auth failed, etc.)
-
-(nice -n ${PRIORITY:-10} ./cpuminer \
+# Start cpuminer in background, filtering noise during sync
+nice -n ${PRIORITY:-10} ./cpuminer \
     -a sha256d \
     -o http://127.0.0.1:8332 \
     -u "$RPC_USER" \
@@ -248,39 +245,61 @@ echo "────────────────────────�
     --coinbase-addr="$COINBASE_ADDR" \
     --coinbase-sig="$COINBASE_MSG" \
     -t "$THREADS" \
-    --api-bind 127.0.0.1:4048 2>&1) | \
-    while IFS= read -r line; do
-        # Check if line is "json_rpc_call failed"
-        if [[ "$line" =~ "json_rpc_call failed" ]]; then
-            # Verify if this is expected error -10 (initial sync)
-            RPC_TEST=$(bitcoin-cli getblocktemplate '{"rules":["segwit"]}' 2>&1)
+    --api-bind 127.0.0.1:4048 2>&1 | \
+    grep -v "json_rpc_call failed" &
+
+CPUMINER_PID=$!
+echo ""
+echo "[INFO] cpuminer started (PID: $CPUMINER_PID)"
+echo ""
+
+# Monitor sync status and RPC health
+BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
+HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[0-9]*' | grep -o '[0-9]*' || echo "0")
+
+if [ "$BLOCKS" -lt "$HEADERS" ] && [ "$HEADERS" -gt 0 ]; then
+    echo "[INFO] Blockchain is syncing. Monitoring progress..."
+    echo ""
+    
+    LAST_BLOCKS=$BLOCKS
+    RPC_ERROR_COUNT=0
+    
+    while kill -0 $CPUMINER_PID 2>/dev/null; do
+        # Check RPC health
+        if ! bitcoin-cli getblockchaininfo >/dev/null 2>&1; then
+            RPC_ERROR_COUNT=$((RPC_ERROR_COUNT + 1))
+            echo "[$(date '+%H:%M:%S')] ⚠️  WARNING: Cannot connect to Bitcoin Core RPC!"
             
-            if echo "$RPC_TEST" | grep -q "error code: -10"; then
-                # Error -10 = initial sync, this is expected - show sync status instead
-                BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
-                HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[0-9]*' | grep -o '[0-9]*' || echo "0")
-                
-                if [ "$HEADERS" -gt 0 ]; then
-                    PROGRESS=$((BLOCKS * 100 / HEADERS))
-                    BLOCKS_LEFT=$((HEADERS - BLOCKS))
-                    echo "[$(date '+%H:%M:%S')] Sync: ${PROGRESS}% ($BLOCKS/$HEADERS) | ${BLOCKS_LEFT} blocks remaining | Mining on standby"
-                fi
-            else
-                # NOT error -10 = real problem! Show it
-                echo "$line"
-                echo "[ERROR] Unexpected RPC error (not error -10):"
-                echo "$RPC_TEST" | head -5
+            if [ $RPC_ERROR_COUNT -gt 3 ]; then
+                echo "[$(date '+%H:%M:%S')] ❌ ERROR: Bitcoin Core appears to be down. Check: bitcoin-cli getblockchaininfo"
+                echo "[$(date '+%H:%M:%S')] Stopping miner..."
+                kill $CPUMINER_PID
+                exit 1
             fi
         else
-            # Not an RPC error line - show it normally
-            echo "$line"
+            RPC_ERROR_COUNT=0
             
-            # Show helpful info after startup
-            if [[ "$line" =~ "miner threads started" ]]; then
-                echo ""
-                echo "[INFO] Miner started successfully"
-                echo "[INFO] Sync status updates will appear below..."
-                echo ""
+            BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
+            HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[0-9]*' | grep -o '[0-9]*' || echo "0")
+            
+            if [ "$BLOCKS" -lt "$HEADERS" ]; then
+                PROGRESS=$((BLOCKS * 100 / HEADERS))
+                BLOCKS_LEFT=$((HEADERS - BLOCKS))
+                BLOCKS_GAINED=$((BLOCKS - LAST_BLOCKS))
+                
+                echo "[$(date '+%H:%M:%S')] Sync: ${PROGRESS}% ($BLOCKS/$HEADERS) | +${BLOCKS_GAINED}/min | ${BLOCKS_LEFT} left"
+                LAST_BLOCKS=$BLOCKS
+            else
+                echo "[$(date '+%H:%M:%S')] ✅ Blockchain fully synced! Solo mining is now active!"
+                break
             fi
         fi
+        
+        sleep 60
     done
+else
+    echo "[INFO] Blockchain already synced - mining actively!"
+fi
+
+# Wait for cpuminer to exit
+wait $CPUMINER_PID
