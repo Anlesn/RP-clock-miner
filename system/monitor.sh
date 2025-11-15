@@ -73,10 +73,21 @@ hashrate=$(curl -s http://127.0.0.1:4048/summary 2>/dev/null | grep -o '"KHS":[0
 
 log "Status: Blocks=$blocks, Hashrate=${hashrate}KH/s, Temp=${temp}°C, Disk=${disk_usage}%"
 
-# Rotate log if too large
-if [ -f "$LOG_FILE" ] && [ $(stat -c%s "$LOG_FILE") -gt 10485760 ]; then
-    mv "$LOG_FILE" "${LOG_FILE}.old"
-    touch "$LOG_FILE"
+# Rotate log if too large (10MB)
+if [ -f "$LOG_FILE" ]; then
+    # Get file size in bytes (portable way for Linux and macOS)
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        log_size=$(stat -f%z "$LOG_FILE")
+    else
+        # Linux
+        log_size=$(stat -c%s "$LOG_FILE")
+    fi
+    
+    if [ "$log_size" -gt 10485760 ]; then
+        mv "$LOG_FILE" "${LOG_FILE}.old"
+        touch "$LOG_FILE"
+    fi
 fi
 
 
