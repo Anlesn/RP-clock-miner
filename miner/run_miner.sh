@@ -238,9 +238,9 @@ echo "────────────────────────�
 nice -n ${PRIORITY:-10} ./cpuminer \
     -a sha256d \
     -o http://127.0.0.1:8332 \
-    -u $RPC_USER \
-    -p $RPC_PASS \
-    --coinbase-addr=$COINBASE_ADDR \
+    -u "$RPC_USER" \
+    -p "$RPC_PASS" \
+    --coinbase-addr="$COINBASE_ADDR" \
     --coinbase-sig="$COINBASE_MSG" \
-    -t $THREADS \
+    -t "$THREADS" \
     --api-bind 127.0.0.1:4048
