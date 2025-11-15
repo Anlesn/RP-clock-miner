@@ -313,7 +313,7 @@ if [ "$HEADERS" -gt 0 ] && [ "$BLOCKS" -lt "$HEADERS" ]; then
                 BLOCKS_LEFT=$((HEADERS - BLOCKS))
                 BLOCKS_GAINED=$((BLOCKS - LAST_BLOCKS))
                 
-                echo "[$(date '+%H:%M:%S')] Sync: ${PROGRESS}% ($BLOCKS/$HEADERS) | +${BLOCKS_GAINED}/min | ${BLOCKS_LEFT} left"
+                echo "[$(date '+%H:%M:%S')] Sync: ${PROGRESS}% ($BLOCKS/$HEADERS) | +${BLOCKS_GAINED}/min | ${BLOCKS_LEFT} left | Estimated time remaining: $((BLOCKS_LEFT / BLOCKS_GAINED)) minutes"
                 LAST_BLOCKS=$BLOCKS
             else
                 echo "[$(date '+%H:%M:%S')] ✅ Blockchain fully synced! Solo mining is now active!"
