@@ -12,7 +12,8 @@ log "Power Recovery Check Started"
 log "============================================"
 
 # 1. Check if this is a recovery from power failure
-LAST_SHUTDOWN="/var/log/last-shutdown-clean"
+# Using /tmp instead of /var/log for easier permission management
+LAST_SHUTDOWN="/tmp/rp-miner-clean-shutdown"
 if [ ! -f "$LAST_SHUTDOWN" ]; then
     log "WARNING: Unclean shutdown detected (possible power failure)"
     
@@ -75,7 +76,7 @@ fi
 cat > /tmp/create-shutdown-flag.sh << 'EOF'
 #!/bin/bash
 # This creates a flag on clean shutdown
-touch /var/log/last-shutdown-clean
+touch /tmp/rp-miner-clean-shutdown
 sync
 EOF
 
