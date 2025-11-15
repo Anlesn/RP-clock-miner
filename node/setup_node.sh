@@ -206,7 +206,7 @@ echo -e "${GREEN}Bitcoin Core installed successfully!${NC}"
 echo "Your node will use pruned mode (~5GB storage)"
 echo
 echo -e "${YELLOW}Next steps:${NC}"
-echo "1. Configure your mining credentials:"
+echo "1. Configure your mining credentials (if not done yet):"
 echo "   bash secrets/generate_secrets.sh"
 echo "   bash secrets/set_secrets.sh"
 echo
