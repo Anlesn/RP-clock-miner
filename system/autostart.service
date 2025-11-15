@@ -26,20 +26,21 @@ After=graphical.target
 
 [Service]
 # User account to run the service
-User=pi
-Group=pi
+# Will be replaced by install_autostart.sh with actual user
+User=USER_PLACEHOLDER
+Group=USER_PLACEHOLDER
 
 # Working directory
-WorkingDirectory=/home/pi/RP-clock-miner
+WorkingDirectory=PROJECT_DIR_PLACEHOLDER
 
 # Environment file (contains secrets) - REQUIRED
-EnvironmentFile=/home/pi/RP-clock-miner/.env
+EnvironmentFile=PROJECT_DIR_PLACEHOLDER/.env
 
 # Path to startup script
-ExecStart=/home/pi/RP-clock-miner/system/start.sh
+ExecStart=PROJECT_DIR_PLACEHOLDER/system/start.sh
 
 # Pre-start health check
-ExecStartPre=/home/pi/RP-clock-miner/system/health_check.sh
+ExecStartPre=PROJECT_DIR_PLACEHOLDER/system/health_check.sh
 
 # Restart configuration for maximum reliability
 Restart=always
