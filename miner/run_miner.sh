@@ -227,7 +227,7 @@ echo "────────────────────────�
 # -t: Number of mining threads
 # --cpu-priority: Nice level (10 = lower priority)
 # --api-bind: API for monitoring on port 4048
-./cpuminer \
+nice -n ${PRIORITY:-10} ./cpuminer \
     -a sha256d \
     -o http://127.0.0.1:8332 \
     -u $RPC_USER \
@@ -235,5 +235,4 @@ echo "────────────────────────�
     --coinbase-addr=$COINBASE_ADDR \
     --coinbase-sig="$COINBASE_MSG" \
     -t $THREADS \
-    --cpu-priority ${PRIORITY:-10} \
     --api-bind 127.0.0.1:4048
