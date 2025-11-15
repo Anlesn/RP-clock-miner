@@ -1,27 +1,27 @@
 {
+  "_comment_mining": "Number of CPU threads - RPi5 has 4 cores. Use 2 for low power/24-7 operation, 4 for maximum performance",
   "mining": {
-    "threads": 4,                      // Number of CPU threads (RPi5 has 4 cores)
-                                       // Use 2 for low power/24-7 operation
-                                       // Use 4 for maximum performance
-    "priority": 10                     // Process priority (0-20, higher = lower priority)
-                                       // Use 19 for 24/7 operation (lowest priority)
-                                       // Use 0 for maximum performance (may affect system)
+    "threads": 4,
+    "priority": 10
   },
   
+  "_comment_priority": "Process priority (0-20, higher = lower priority). Use 19 for 24/7 operation (lowest priority), 0 for maximum performance",
+  
+  "_comment_bitcoind": "These will be overridden by .env values (BITCOIN_RPC_USER and BITCOIN_RPC_PASSWORD)",
   "bitcoind": {
-    "user": "PLACEHOLDER",             // Will be overridden by .env BITCOIN_RPC_USER
-    "password": "PLACEHOLDER"          // Will be overridden by .env BITCOIN_RPC_PASSWORD
+    "user": "PLACEHOLDER",
+    "password": "PLACEHOLDER"
   },
   
+  "_comment_coinbase": "Mining address and message. Address will be overridden by .env BITCOIN_MINING_ADDRESS",
   "coinbase": {
-    // These will be overridden by .env values for security
-    "address": "PLACEHOLDER",          // Will be overridden by .env BITCOIN_MINING_ADDRESS
-    // Message embedded in blocks you mine (max 100 bytes)
+    "address": "PLACEHOLDER",
     "message": "RPi5 Solo Miner 🤑"
   },
   
+  "_comment_monitoring": "Temperature thresholds in Celsius for warnings and critical alerts",
   "monitoring": {
-    "temperature_warning": 70,         // Warning temperature in Celsius
-    "temperature_critical": 80         // Critical temperature (throttle mining)
+    "temperature_warning": 70,
+    "temperature_critical": 80
   }
 }
