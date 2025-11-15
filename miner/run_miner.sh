@@ -233,9 +233,14 @@ echo "────────────────────────�
 # --coinbase-addr: Where block rewards go
 # --coinbase-sig: Message in coinbase transaction
 # -t: Number of mining threads
-# --cpu-priority: Nice level (10 = lower priority)
 # --api-bind: API for monitoring on port 4048
-nice -n ${PRIORITY:-10} ./cpuminer \
+# Note: Using 'nice' for process priority instead of deprecated --cpu-priority
+
+# Start cpuminer with intelligent log filtering
+# Filter "json_rpc_call failed" only when it's expected (error -10 during sync)
+# Show all other errors (connection refused, auth failed, etc.)
+
+(nice -n ${PRIORITY:-10} ./cpuminer \
     -a sha256d \
     -o http://127.0.0.1:8332 \
     -u "$RPC_USER" \
@@ -243,4 +248,39 @@ nice -n ${PRIORITY:-10} ./cpuminer \
     --coinbase-addr="$COINBASE_ADDR" \
     --coinbase-sig="$COINBASE_MSG" \
     -t "$THREADS" \
-    --api-bind 127.0.0.1:4048
+    --api-bind 127.0.0.1:4048 2>&1) | \
+    while IFS= read -r line; do
+        # Check if line is "json_rpc_call failed"
+        if [[ "$line" =~ "json_rpc_call failed" ]]; then
+            # Verify if this is expected error -10 (initial sync)
+            RPC_TEST=$(bitcoin-cli getblocktemplate '{"rules":["segwit"]}' 2>&1)
+            
+            if echo "$RPC_TEST" | grep -q "error code: -10"; then
+                # Error -10 = initial sync, this is expected - show sync status instead
+                BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
+                HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[0-9]*' | grep -o '[0-9]*' || echo "0")
+                
+                if [ "$HEADERS" -gt 0 ]; then
+                    PROGRESS=$((BLOCKS * 100 / HEADERS))
+                    BLOCKS_LEFT=$((HEADERS - BLOCKS))
+                    echo "[$(date '+%H:%M:%S')] Sync: ${PROGRESS}% ($BLOCKS/$HEADERS) | ${BLOCKS_LEFT} blocks remaining | Mining on standby"
+                fi
+            else
+                # NOT error -10 = real problem! Show it
+                echo "$line"
+                echo "[ERROR] Unexpected RPC error (not error -10):"
+                echo "$RPC_TEST" | head -5
+            fi
+        else
+            # Not an RPC error line - show it normally
+            echo "$line"
+            
+            # Show helpful info after startup
+            if [[ "$line" =~ "miner threads started" ]]; then
+                echo ""
+                echo "[INFO] Miner started successfully"
+                echo "[INFO] Sync status updates will appear below..."
+                echo ""
+            fi
+        fi
+    done
