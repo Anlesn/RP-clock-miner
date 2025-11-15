@@ -27,21 +27,13 @@ Applies secrets from `.env` to system configuration:
 bash secrets/set_secrets.sh
 ```
 
-### `backup_secrets.sh`
-Creates encrypted backup of your secrets and configuration.
-
-```bash
-bash secrets/backup_secrets.sh
-```
-
 ## Quick Start
 
 1. Generate secrets: `bash secrets/generate_secrets.sh`
 2. Apply configuration: `bash secrets/set_secrets.sh`
-3. Create backup: `bash secrets/backup_secrets.sh`
 
 ## Security Notes
 
 - **Never commit `.env` to git**
-- **Use hardware wallet address when possible**
-- **Store backups securely**
+- **Use public wallet address for mining rewards**
+- **RPC credentials can be regenerated anytime via generate_secrets.sh**

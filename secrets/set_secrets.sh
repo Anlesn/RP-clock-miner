@@ -17,9 +17,7 @@ echo
 # Check if .env file exists
 if [ ! -f .env ]; then
     echo -e "${RED}[!] .env file not found!${NC}"
-    echo "Please run one of these commands:"
-    echo "  - bash secrets/create_secrets.sh"
-    echo "  - cp env.example .env && edit .env"
+    echo "Please run: bash secrets/generate_secrets.sh"
     exit 1
 fi
 
@@ -100,5 +98,4 @@ echo "  - Use hardware wallet for large amounts"
 echo "  - Enable 2FA on your RPi if possible"
 echo
 echo -e "${YELLOW}Next steps:${NC}"
-echo "1. (optional) Create backup: bash secrets/backup_wallet.sh"
-echo "2. Continue with Bitcoin Core setup: bash node/setup_node.sh"
+echo "1. Continue with Bitcoin Core setup: bash node/setup_node.sh"
