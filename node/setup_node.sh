@@ -202,28 +202,23 @@ echo "╔═══════════════════════�
 echo "║         Setup Complete!                    ║"
 echo "╚════════════════════════════════════════════╝"
 echo
-echo "Next steps:"
-echo "1. Start Bitcoin Core: bitcoind -daemon"
-echo "   (-daemon runs the process in background)"
-echo
-echo "2. Wait for initial sync (this will take time)"
-echo "   Initial sync can take 12-24 hours!"
-echo "   Check progress: bitcoin-cli getblockchaininfo"
-echo
-echo "3. Configure your mining address:"
-echo "   Run: bash secrets/generate_secrets.sh"
-echo "   Enter your Bitcoin address (use hardware wallet for security!)"
-echo
-echo "4. Apply configuration:"
-echo "   Run: bash secrets/set_secrets.sh"
-echo "   This will configure the miner with your address"
-echo
+echo -e "${GREEN}Bitcoin Core installed successfully!${NC}"
 echo "Your node will use pruned mode (~5GB storage)"
-echo "Instead of 500+ GB, only 5GB will be used"
 echo
 echo -e "${YELLOW}Next steps:${NC}"
-echo "1. (Optional, not implemented yet) Install Python dependencies: pip3 install -r display/requirements.txt"
-echo "2. Set up autostart: bash system/install_autostart.sh"
+echo "1. Configure your mining credentials:"
+echo "   bash secrets/generate_secrets.sh"
+echo "   bash secrets/set_secrets.sh"
+echo
+echo "2. Set up autostart service:"
+echo "   bash system/install_autostart.sh"
+echo
+echo "3. Start mining:"
+echo "   sudo systemctl start rp-clock-miner"
+echo
+echo -e "${BLUE}Note:${NC}"
+echo "- Bitcoin Core will start automatically with the service"
+echo "- Initial sync takes 12-24 hours. Check progress:"
+echo "  bitcoin-cli getblockchaininfo"
 echo
 echo "Happy solo mining! May the odds be ever in your favor 🎰"
-echo "Remember: chances are minimal, but they exist!"
