@@ -185,10 +185,13 @@ journalctl -u rp-clock-miner -f
 journalctl -u rp-clock-miner --since today
 
 # Check sync progress
-bitcoin-cli getblockchaininfo | jq '.blocks, .headers, .verificationprogress'
+bitcoin-cli getblockchaininfo | jq '.blocks, .headers'
 
-# Mining statistics
-tail -f /var/log/rp-clock-miner.log
+# Mining statistics (if cpuminer API is running)
+curl -s http://127.0.0.1:4048/summary | jq
+
+# Send Telegram stats manually
+bash system/telegram_stats.sh
 
 # System health
 htop  # CPU usage and temperature
@@ -233,7 +236,9 @@ RP-clock-miner/
     ├── power_recovery.sh     # Power failure recovery
     ├── monitor.sh            # Cron-based monitoring
     ├── start.sh              # Main startup orchestrator
-    └── install_autostart.sh  # Auto-start installer
+    ├── install_autostart.sh  # Auto-start installer
+    ├── telegram_notify.sh    # Telegram message sender
+    └── telegram_stats.sh     # Telegram statistics reporter
 ```
 
 ## 🔗 Script Dependencies & Flow
@@ -280,6 +285,10 @@ RP-clock-miner/
 BITCOIN_RPC_USER=your_username
 BITCOIN_RPC_PASSWORD=your_secure_password
 BITCOIN_MINING_ADDRESS=your_bitcoin_address
+
+# Optional: Telegram notifications
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+TELEGRAM_CHAT_ID=your_chat_id_here
 ```
 
 ### Mining Settings (miner/config.json)
@@ -297,6 +306,38 @@ BITCOIN_MINING_ADDRESS=your_bitcoin_address
 
 ### Display Settings (display/config.json) - NOT IMPLEMENTED YET
 Display functionality is planned for future versions. Configuration file exists but is not currently used.
+
+### Telegram Notifications (Optional)
+Get real-time updates on your phone while display is not yet implemented!
+
+**Setup:**
+1. Create Telegram bot via [@BotFather](https://t.me/botfather)
+   - Send `/newbot`
+   - Choose name and username
+   - Copy the **bot token**
+
+2. Get your Chat ID:
+   - Send any message to your bot
+   - Visit: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
+   - Find `"chat":{"id":123456789}` - this is your **chat ID**
+
+3. Add to `.env`:
+   ```bash
+   TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+   TELEGRAM_CHAT_ID=123456789
+   ```
+
+4. Test:
+   ```bash
+   bash system/telegram_notify.sh "Test message!"
+   ```
+
+**What you'll receive:**
+- 🎉 Notification when blockchain sync completes
+- 📊 Mining statistics every 30 minutes (configurable in `miner/config.json`)
+  - Hashrate, temperature, sync status
+  - Bitcoin price, network difficulty
+  - System resources (CPU, memory, disk)
 
 ## 📊 Performance & Probability
 

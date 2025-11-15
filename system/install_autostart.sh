@@ -61,9 +61,34 @@ EOF
 sudo cp /tmp/rp-clock-miner-logrotate /etc/logrotate.d/rp-clock-miner
 
 # 6. Set up cron monitoring
-echo -e "${YELLOW}[*] Setting up monitoring cron job...${NC}"
-(crontab -l 2>/dev/null | grep -v "rp-clock-miner/system/monitor.sh" || true
- echo "*/5 * * * * $PROJECT_DIR/system/monitor.sh") | crontab -
+echo -e "${YELLOW}[*] Setting up monitoring cron jobs...${NC}"
+
+# Read Telegram interval from config.json
+TELEGRAM_INTERVAL=30
+if [ -f "$PROJECT_DIR/miner/config.json" ]; then
+    if command -v jq >/dev/null 2>&1; then
+        TELEGRAM_INTERVAL=$(jq -r '.telegram.stats_interval_minutes // 30' "$PROJECT_DIR/miner/config.json")
+    else
+        # Fallback to grep if jq not available
+        TELEGRAM_INTERVAL=$(grep -o '"stats_interval_minutes":[[:space:]]*[0-9]*' "$PROJECT_DIR/miner/config.json" | grep -o '[0-9]*' || echo "30")
+    fi
+fi
+
+# Skip Telegram cron if interval is 0 (disabled)
+if [ "$TELEGRAM_INTERVAL" -eq 0 ]; then
+    echo "[!] Telegram stats disabled (interval = 0)"
+    (crontab -l 2>/dev/null | grep -v "rp-clock-miner/system/monitor.sh" | grep -v "rp-clock-miner/system/telegram_stats.sh" || true
+     echo "*/5 * * * * $PROJECT_DIR/system/monitor.sh") | crontab -
+    echo "[✓] Health monitoring: every 5 minutes"
+else
+    # System health monitoring (every 5 minutes) + Telegram stats
+    (crontab -l 2>/dev/null | grep -v "rp-clock-miner/system/monitor.sh" | grep -v "rp-clock-miner/system/telegram_stats.sh" || true
+     echo "*/5 * * * * $PROJECT_DIR/system/monitor.sh"
+     echo "*/${TELEGRAM_INTERVAL} * * * * $PROJECT_DIR/system/telegram_stats.sh") | crontab -
+    
+    echo "[✓] Health monitoring: every 5 minutes"
+    echo "[✓] Telegram stats: every ${TELEGRAM_INTERVAL} minutes"
+fi
 
 # 7. Enable Bitcoin Core autostart
 echo -e "${YELLOW}[*] Configuring Bitcoin Core autostart...${NC}"

@@ -23,5 +23,10 @@
   "monitoring": {
     "temperature_warning": 70,
     "temperature_critical": 80
+  },
+  
+  "_comment_telegram": "Telegram notifications interval in minutes (30 = every 30 minutes). Set to 0 to disable",
+  "telegram": {
+    "stats_interval_minutes": 30
   }
 }

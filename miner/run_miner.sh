@@ -317,6 +317,21 @@ if [ "$HEADERS" -gt 0 ] && [ "$BLOCKS" -lt "$HEADERS" ]; then
                 LAST_BLOCKS=$BLOCKS
             else
                 echo "[$(date '+%H:%M:%S')] ✅ Blockchain fully synced! Solo mining is now active!"
+                
+                # Send Telegram notification about sync completion
+                if [ -f "../system/telegram_notify.sh" ]; then
+                    bash "../system/telegram_notify.sh" "🎉 <b>Bitcoin Sync Complete!</b>
+
+✅ Blockchain fully synchronized
+⛏️ Solo mining is now ACTIVE!
+
+📊 Stats:
+Blocks: $BLOCKS
+Time: $(date '+%Y-%m-%d %H:%M:%S')
+
+<i>Your RPi5 is now mining Bitcoin! 🚀</i>" &
+                fi
+                
                 break
             fi
         fi
@@ -325,6 +340,7 @@ if [ "$HEADERS" -gt 0 ] && [ "$BLOCKS" -lt "$HEADERS" ]; then
     done
 else
     echo "[INFO] Blockchain already synced - mining actively!"
+    echo "[INFO] Monitoring cpuminer process..."
 fi
 
 # Wait for cpuminer to exit
