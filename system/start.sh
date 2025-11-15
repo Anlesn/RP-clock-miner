@@ -83,9 +83,26 @@ source /tmp/rp-miner-status 2>/dev/null || true
 if [ "$DISPLAY_TYPE" != "none" ] && [ -f "$PROJECT_DIR/display/display.py" ]; then
     log "Starting display dashboard (type: $DISPLAY_TYPE)..."
     
-    # Kill any existing display process
-    pkill -f "display.py" || true
-    sleep 1
+    # Kill any existing display process and wait for it to terminate
+    if pgrep -f "display.py" > /dev/null; then
+        log "Stopping existing display process..."
+        pkill -f "display.py"
+        
+        # Wait for process to actually terminate (max 5 seconds)
+        for i in {1..10}; do
+            if ! pgrep -f "display.py" > /dev/null; then
+                break
+            fi
+            sleep 0.5
+        done
+        
+        # Force kill if still running
+        if pgrep -f "display.py" > /dev/null; then
+            log "Force killing display process..."
+            pkill -9 -f "display.py"
+            sleep 1
+        fi
+    fi
     
     # Start display with appropriate environment
     case "$DISPLAY_TYPE" in
