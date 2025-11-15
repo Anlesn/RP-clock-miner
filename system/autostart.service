@@ -32,8 +32,8 @@ Group=pi
 # Working directory
 WorkingDirectory=/home/pi/RP-clock-miner
 
-# Environment file (contains secrets)
-EnvironmentFile=-/home/pi/RP-clock-miner/.env
+# Environment file (contains secrets) - REQUIRED
+EnvironmentFile=/home/pi/RP-clock-miner/.env
 
 # Path to startup script
 ExecStart=/home/pi/RP-clock-miner/system/start.sh
