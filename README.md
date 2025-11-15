@@ -31,7 +31,8 @@ A decorative Bitcoin solo mining setup for Raspberry Pi 5 that doubles as a desk
 - **Auto-Recovery**: Survives power failures and crashes
 - **24/7 Operation**: Fully autonomous after initial setup
 
-### Display Information
+### Display Information (Coming Soon)
+Display functionality is planned but not yet implemented. Future versions will show:
 - 🕐 Current time and date
 - ⚡ Real-time hashrate
 - 💰 Live Bitcoin price
@@ -96,7 +97,6 @@ cd RP-clock-miner
 # Make scripts executable
 chmod +x secrets/*.sh
 chmod +x system/*.sh node/*.sh miner/*.sh
-chmod +x display/display.py
 ```
 
 ### 2. Configure Security
@@ -121,9 +121,6 @@ bash secrets/set_secrets.sh
 ```bash
 # Install Bitcoin Core and system dependencies
 bash node/setup_node.sh
-
-# Install Python dependencies for display
-pip3 install -r display/requirements.txt
 
 # Set up automatic startup and monitoring
 bash system/install_autostart.sh
@@ -222,10 +219,10 @@ RP-clock-miner/
 ├── miner/               # CPU mining software
 │   ├── config.json      # Mining parameters
 │   └── run_miner.sh     # Miner startup script
-├── display/             # Display dashboard
-│   ├── display.py       # Main display script
-│   ├── config.json      # Display configuration
-│   └── requirements.txt # Python dependencies
+├── display/             # Display dashboard (NOT IMPLEMENTED YET)
+│   ├── display.py       # Main display script (placeholder)
+│   ├── config.json      # Display configuration (placeholder)
+│   └── requirements.txt # Python dependencies (placeholder)
 ├── secrets/             # Security tools
 │   ├── generate_secrets.sh    # Credential generator
 │   ├── set_secrets.sh        # Apply configuration
@@ -249,8 +246,8 @@ RP-clock-miner/
 3. **start.sh** orchestrates:
    - Loads `.env` variables
    - Starts Bitcoin Core daemon
-   - Detects display type
-   - Launches `display/display.py` (if display found)
+   - Detects display type (for future use)
+   - Launches `display/display.py` (NOT IMPLEMENTED - will be skipped)
    - Starts `miner/run_miner.sh`
 
 ### Health & Recovery Flow
@@ -298,27 +295,8 @@ BITCOIN_MINING_ADDRESS=your_bitcoin_address
 }
 ```
 
-### Display Settings (display/config.json)
-```json
-{
-  "display": {
-    "theme": "cyberpunk",      // Display theme
-    "refresh_rate": 1,         // Update frequency
-    "show_btc_price": true     // Show BTC price
-  }
-}
-```
-
-## 🖥️ Display Setup
-
-### Auto-detection
-The system automatically detects:
-- HDMI displays
-- I2C devices (OLED/LCD)
-- SPI displays
-
-### Manual Configuration
-Edit `display/display.py` for specific display types or custom layouts.
+### Display Settings (display/config.json) - NOT IMPLEMENTED YET
+Display functionality is planned for future versions. Configuration file exists but is not currently used.
 
 ## 📊 Performance & Probability
 
