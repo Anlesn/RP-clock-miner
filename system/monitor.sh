@@ -2,6 +2,9 @@
 # Monitoring script that runs via cron to ensure everything is healthy
 # Add to crontab: */5 * * * * /home/user/RP-clock-miner/system/monitor.sh
 
+# Ensure PATH includes all binaries when run from cron
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
 # Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"

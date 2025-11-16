@@ -2,6 +2,9 @@
 # Telegram mining statistics reporter
 # Sends detailed mining stats to Telegram
 
+# Ensure PATH includes bitcoin-cli and other binaries
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
 # Get project directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"

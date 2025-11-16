@@ -74,19 +74,30 @@ if [ -f "$PROJECT_DIR/miner/config.json" ]; then
     fi
 fi
 
-# Skip Telegram cron if interval is 0 (disabled)
+# Remove old RP-clock-miner cron entries and add new ones
+# This prevents duplicates on reinstall
+TEMP_CRON=$(mktemp)
+crontab -l 2>/dev/null | grep -v "rp-clock-miner" > "$TEMP_CRON" || true
+
+# Add PATH for cron jobs
+echo "PATH=/usr/local/bin:/usr/bin:/bin" >> "$TEMP_CRON"
+
+# Add monitoring
+echo "*/5 * * * * $PROJECT_DIR/system/monitor.sh" >> "$TEMP_CRON"
+
+# Add Telegram stats if enabled
 if [ "$TELEGRAM_INTERVAL" -eq 0 ]; then
     echo "[!] Telegram stats disabled (interval = 0)"
-    (crontab -l 2>/dev/null | grep -v "rp-clock-miner/system/monitor.sh" | grep -v "rp-clock-miner/system/telegram_stats.sh" || true
-     echo "*/5 * * * * $PROJECT_DIR/system/monitor.sh") | crontab -
-    echo "[✓] Health monitoring: every 5 minutes"
 else
-    # System health monitoring (every 5 minutes) + Telegram stats
-    (crontab -l 2>/dev/null | grep -v "rp-clock-miner/system/monitor.sh" | grep -v "rp-clock-miner/system/telegram_stats.sh" || true
-     echo "*/5 * * * * $PROJECT_DIR/system/monitor.sh"
-     echo "*/${TELEGRAM_INTERVAL} * * * * $PROJECT_DIR/system/telegram_stats.sh") | crontab -
-    
-    echo "[✓] Health monitoring: every 5 minutes"
+    echo "*/${TELEGRAM_INTERVAL} * * * * $PROJECT_DIR/system/telegram_stats.sh" >> "$TEMP_CRON"
+fi
+
+# Install new crontab
+crontab "$TEMP_CRON"
+rm -f "$TEMP_CRON"
+
+echo "[✓] Health monitoring: every 5 minutes"
+if [ "$TELEGRAM_INTERVAL" -gt 0 ]; then
     echo "[✓] Telegram stats: every ${TELEGRAM_INTERVAL} minutes"
 fi
 
