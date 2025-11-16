@@ -76,16 +76,17 @@ fi
 
 # Remove old RP-clock-miner cron entries and add new ones
 # This prevents duplicates on reinstall
+# We keep all other user's cron entries intact
 TEMP_CRON=$(mktemp)
-crontab -l 2>/dev/null | grep -v "rp-clock-miner" > "$TEMP_CRON" || true
 
-# Add PATH for cron jobs
-echo "PATH=/usr/local/bin:/usr/bin:/bin" >> "$TEMP_CRON"
+# Keep existing cron entries that are NOT related to rp-clock-miner
+# We don't touch PATH or any other user entries
+crontab -l 2>/dev/null | grep -v "rp-clock-miner" > "$TEMP_CRON" 2>/dev/null || true
 
-# Add monitoring
+# Add our monitoring tasks (PATH is set inside each script, not in crontab)
 echo "*/5 * * * * $PROJECT_DIR/system/monitor.sh" >> "$TEMP_CRON"
 
-# Add Telegram stats if enabled
+# Add Telegram stats if enabled (single entry)
 if [ "$TELEGRAM_INTERVAL" -eq 0 ]; then
     echo "[!] Telegram stats disabled (interval = 0)"
 else
