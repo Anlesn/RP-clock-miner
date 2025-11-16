@@ -79,9 +79,10 @@ fi
 # We keep all other user's cron entries intact
 TEMP_CRON=$(mktemp)
 
-# Keep existing cron entries that are NOT related to rp-clock-miner
+# Keep existing cron entries that are NOT related to RP-clock-miner
 # We don't touch PATH or any other user entries
-crontab -l 2>/dev/null | grep -v "rp-clock-miner" > "$TEMP_CRON" 2>/dev/null || true
+# Using case-insensitive grep to match both rp-clock-miner and RP-clock-miner
+crontab -l 2>/dev/null | grep -vi "clock-miner" > "$TEMP_CRON" 2>/dev/null || true
 
 # Add our monitoring tasks (PATH is set inside each script, not in crontab)
 echo "*/5 * * * * $PROJECT_DIR/system/monitor.sh" >> "$TEMP_CRON"
