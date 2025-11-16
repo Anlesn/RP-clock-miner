@@ -41,6 +41,11 @@ if ! systemctl is-active --quiet rp-clock-miner; then
     fi
 fi
 
+# Check for found blocks
+if [ -f "$SCRIPT_DIR/check_block_found.sh" ]; then
+    bash "$SCRIPT_DIR/check_block_found.sh"
+fi
+
 # Check temperature (read threshold from config)
 CONFIG_FILE="$PROJECT_DIR/miner/config.json"
 if [ -f "$CONFIG_FILE" ]; then

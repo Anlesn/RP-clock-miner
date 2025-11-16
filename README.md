@@ -333,11 +333,14 @@ Get real-time updates on your phone while display is not yet implemented!
    ```
 
 **What you'll receive:**
+- 🎉🎉🎉 **INSTANT notification when you find a block!** (checked every 5 min)
 - 🎉 Notification when blockchain sync completes
 - 📊 Mining statistics every 30 minutes (configurable in `miner/config.json`)
-  - Hashrate, temperature, sync status
-  - Bitcoin price, network difficulty
-  - System resources (CPU, memory, disk)
+  - Mining status, hashrate, shares
+  - Blockchain sync progress
+  - Bitcoin price and your wallet balance
+  - Network difficulty
+  - System resources (temperature, memory, disk)
 
 ## 📊 Performance & Probability
 
