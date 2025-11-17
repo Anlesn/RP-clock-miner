@@ -69,25 +69,49 @@ get_stats() {
         SYNC_PERCENT="N/A"
     fi
     
-    # Mining status (via API)
-    MINER_API=$(curl -s http://127.0.0.1:4048/summary 2>/dev/null)
-    if [ -n "$MINER_API" ]; then
-        HASHRATE=$(echo "$MINER_API" | grep -o '"KHS":[0-9.]*' | cut -d: -f2)
-        if [ -n "$HASHRATE" ]; then
-            HASHRATE="${HASHRATE} KH/s"
-            MINER_STATUS="✅ Mining"
+    # Mining status
+    # Check if cpuminer process is running
+    if pgrep -f "cpuminer" > /dev/null 2>&1; then
+        # Try to get hashrate from API
+        MINER_API=$(curl -s http://127.0.0.1:4048/summary 2>/dev/null)
+        if [ -n "$MINER_API" ]; then
+            HASHRATE=$(echo "$MINER_API" | grep -o '"KHS":[0-9.]*' | cut -d: -f2)
+            if [ -n "$HASHRATE" ] && [ "$HASHRATE" != "0" ]; then
+                # API responds with hashrate - actively mining
+                HASHRATE="${HASHRATE} KH/s"
+                MINER_STATUS="✅ Mining"
+            else
+                # API responds but no hashrate - waiting for sync
+                HASHRATE="N/A"
+                MINER_STATUS="⏸️ Waiting for sync"
+            fi
         else
-            HASHRATE="N/A"
-            MINER_STATUS="⏸️ Waiting"
+            # API not responding - check if blockchain is synced
+            if [ "$SYNC_PERCENT" != "N/A" ] && [ "$SYNC_PERCENT" -lt 100 ]; then
+                # Not synced - waiting is expected
+                HASHRATE="N/A"
+                MINER_STATUS="⏸️ Waiting for sync"
+            else
+                # Synced but API not responding - this is odd
+                HASHRATE="N/A"
+                MINER_STATUS="⚠️ Running (no API)"
+            fi
         fi
         
-        ACCEPTED=$(echo "$MINER_API" | grep -o '"ACC":[0-9]*' | cut -d: -f2 || echo "0")
-        REJECTED=$(echo "$MINER_API" | grep -o '"REJ":[0-9]*' | cut -d: -f2 || echo "0")
+        # Calculate uptime of miner service
+        MINER_UPTIME=$(systemctl show rp-clock-miner -p ActiveEnterTimestamp --value 2>/dev/null)
+        if [ -n "$MINER_UPTIME" ]; then
+            MINER_START=$(date -d "$MINER_UPTIME" +%s 2>/dev/null || echo "0")
+            CURRENT_TIME=$(date +%s)
+            MINER_HOURS=$(( (CURRENT_TIME - MINER_START) / 3600 ))
+            MINER_RUNTIME="${MINER_HOURS}h"
+        else
+            MINER_RUNTIME="N/A"
+        fi
     else
         MINER_STATUS="❌ Not running"
         HASHRATE="N/A"
-        ACCEPTED="0"
-        REJECTED="0"
+        MINER_RUNTIME="N/A"
     fi
     
     # System info
@@ -135,7 +159,7 @@ format_message() {
 <b>⛏️ Mining Status:</b>
 Status: ${MINER_STATUS}
 Hashrate: ${HASHRATE}
-Shares: ✅${ACCEPTED} / ❌${REJECTED}
+Runtime: ${MINER_RUNTIME}
 
 <b>⛓️ Bitcoin Core:</b>
 Status: ${BITCOIN_STATUS}

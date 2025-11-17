@@ -336,7 +336,8 @@ Get real-time updates on your phone while display is not yet implemented!
 - 🎉🎉🎉 **INSTANT notification when you find a block!** (checked every 5 min)
 - 🎉 Notification when blockchain sync completes
 - 📊 Mining statistics every 30 minutes (configurable in `miner/config.json`)
-  - Mining status, hashrate, shares
+  - Mining status (Mining/Waiting/Not running)
+  - Hashrate and runtime
   - Blockchain sync progress
   - Bitcoin price and your wallet balance
   - Network difficulty
