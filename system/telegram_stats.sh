@@ -116,6 +116,21 @@ get_stats() {
     
     # System info
     TEMP=$(vcgencmd measure_temp 2>/dev/null | grep -o '[0-9]*\.[0-9]*' || echo "N/A")
+    
+    # CPU usage (average over last minute)
+    if command -v top >/dev/null 2>&1; then
+        # Get idle% and calculate usage%
+        CPU_IDLE=$(top -bn1 | grep "Cpu(s)" | awk '{print $8}' | cut -d'%' -f1 2>/dev/null || echo "0")
+        if [ -n "$CPU_IDLE" ] && [ "$CPU_IDLE" != "0" ]; then
+            CPU_USAGE=$(awk "BEGIN {printf \"%.1f\", 100 - $CPU_IDLE}")
+        else
+            # Fallback: use mpstat or calculate from /proc/stat
+            CPU_USAGE=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {printf "%.1f", usage}' 2>/dev/null || echo "N/A")
+        fi
+    else
+        CPU_USAGE="N/A"
+    fi
+    
     UPTIME=$(uptime -p | sed 's/up //')
     MEM_USED=$(free -h | awk '/^Mem:/ {print $3}')
     MEM_TOTAL=$(free -h | awk '/^Mem:/ {print $2}')
@@ -172,6 +187,7 @@ Price: \$${BTC_PRICE} USD
 Balance: ${WALLET_BALANCE} BTC
 
 <b>🖥️ System:</b>
+CPU Usage: ${CPU_USAGE}%
 Temperature: ${TEMP}°C
 Memory: ${MEM_USED} / ${MEM_TOTAL}
 Disk: ${DISK_USED} / ${DISK_TOTAL} (${DISK_PERCENT})

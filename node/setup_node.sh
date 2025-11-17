@@ -149,13 +149,15 @@ echo "[*] Setting up swap for better performance..."
 if [ $RAM_SIZE -lt 4500 ]; then
     # 4GB model
     SWAP_SIZE="4G"
-    DB_CACHE="450"
+    DB_CACHE="1500"  # Higher value for faster initial sync
     echo "Configuring for 4GB Raspberry Pi 5"
+    echo "Note: dbcache=1500 for fast sync. Can reduce to 450 after sync completes."
 else
     # 8GB model
     SWAP_SIZE="2G"
-    DB_CACHE="1000"
+    DB_CACHE="2500"  # Higher value for faster initial sync
     echo "Configuring for 8GB Raspberry Pi 5"
+    echo "Note: dbcache=2500 for fast sync. Can reduce to 1000 after sync completes."
 fi
 
 echo "Setting swap size: $SWAP_SIZE"
