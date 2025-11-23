@@ -143,8 +143,8 @@ build_cpuminer() {
     cp cpuminer "$OLDPWD/"
     cd "$OLDPWD"
     
-    # Update last check timestamp
-    date +%s > "$UPDATE_CHECK_FILE"
+    # Update last check timestamp (with error handling)
+    date +%s > "$UPDATE_CHECK_FILE" 2>/dev/null || echo "Warning: Could not update check timestamp"
     
     echo -e "${GREEN}[✓] cpuminer built successfully${NC}"
 }
@@ -177,7 +177,7 @@ else
                     NEED_BUILD=1
                 else
                     echo -e "${GREEN}[✓] cpuminer is up to date${NC}"
-                    date +%s > "$OLDPWD/$UPDATE_CHECK_FILE"
+                    date +%s > "$OLDPWD/$UPDATE_CHECK_FILE" 2>/dev/null || true
                 fi
                 cd "$OLDPWD"
             else
@@ -185,8 +185,8 @@ else
             fi
         fi
     else
-        # First run, create update check file
-        date +%s > "$UPDATE_CHECK_FILE"
+        # First run, create update check file (with error handling)
+        date +%s > "$UPDATE_CHECK_FILE" 2>/dev/null || true
     fi
 fi
 
