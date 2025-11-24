@@ -76,7 +76,7 @@ get_stats() {
         # Format: KHS=12484.26;ACC=0;REJ=0;TEMP=51.2
         # Send HTTP GET to trigger response
         if command -v nc >/dev/null 2>&1; then
-            MINER_API=$(echo -e "GET /summary HTTP/1.0\r\n\r\n" | nc -w 1 127.0.0.1 4048 2>/dev/null)
+            MINER_API=$(echo -e "GET /summary HTTP/1.0\r\n\r\n" | nc -w 1 127.0.0.1 4048 2>/dev/null | tr -d '\0')
         else
             MINER_API=""
         fi
@@ -207,7 +207,7 @@ format_message() {
 Status: ${MINER_STATUS}
 Hashrate: ${HASHRATE}
 Runtime: ${MINER_RUNTIME}
-<i>Note: Total hashrate from ${THREADS} CPU threads</i>
+<i>Note: Total hashrate from ${THREADS:-4} CPU threads combined</i>
 
 <b>⛓️ Bitcoin Core:</b>
 Status: ${BITCOIN_STATUS}
