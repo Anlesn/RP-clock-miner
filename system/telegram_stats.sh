@@ -157,7 +157,21 @@ get_stats() {
     DISK_PERCENT=$(df -h / | awk 'NR==2 {print $5}')
     
     # Network difficulty
-    DIFFICULTY=$(bitcoin-cli getmininginfo 2>/dev/null | grep -o '"difficulty":[0-9.]*' | cut -d: -f2 || echo "N/A")
+    if command -v jq >/dev/null 2>&1; then
+        DIFFICULTY=$(bitcoin-cli getmininginfo 2>/dev/null | jq -r '.difficulty // empty' 2>/dev/null)
+    else
+        DIFFICULTY=$(bitcoin-cli getmininginfo 2>/dev/null | grep -o '"difficulty":[0-9.e+]*' | cut -d: -f2 || echo "")
+    fi
+    
+    # Format difficulty (it's a huge number, show in scientific notation or shortened)
+    if [ -n "$DIFFICULTY" ] && [ "$DIFFICULTY" != "N/A" ]; then
+        # If it's a huge number, format it nicely
+        if [ "$(echo "$DIFFICULTY" | wc -c)" -gt 10 ]; then
+            DIFFICULTY=$(awk "BEGIN {printf \"%.2e\", $DIFFICULTY}" 2>/dev/null || echo "$DIFFICULTY")
+        fi
+    else
+        DIFFICULTY="N/A"
+    fi
     
     # Mining address balance (if address is set)
     if [ -n "$BITCOIN_MINING_ADDRESS" ] && [ "$BITCOIN_MINING_ADDRESS" != "YOUR_BITCOIN_ADDRESS_HERE" ]; then
@@ -193,7 +207,7 @@ format_message() {
 Status: ${MINER_STATUS}
 Hashrate: ${HASHRATE}
 Runtime: ${MINER_RUNTIME}
-<i>Note: Hashrate is total across all CPU threads</i>
+<i>Note: Total hashrate from ${THREADS} CPU threads</i>
 
 <b>⛓️ Bitcoin Core:</b>
 Status: ${BITCOIN_STATUS}
