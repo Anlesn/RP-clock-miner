@@ -74,8 +74,9 @@ get_stats() {
     if pgrep -f "cpuminer" > /dev/null 2>&1; then
         # cpuminer API uses plain text protocol (not HTTP)
         # Format: KHS=12484.26;ACC=0;REJ=0;TEMP=51.2
+        # Send HTTP GET to trigger response
         if command -v nc >/dev/null 2>&1; then
-            MINER_API=$(echo "" | nc -w 1 127.0.0.1 4048 2>/dev/null)
+            MINER_API=$(echo -e "GET /summary HTTP/1.0\r\n\r\n" | nc -w 1 127.0.0.1 4048 2>/dev/null)
         else
             MINER_API=""
         fi
