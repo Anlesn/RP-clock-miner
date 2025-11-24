@@ -67,7 +67,7 @@ TimeoutStopSec=60
 # ReadWritePaths=HOME_DIR_PLACEHOLDER/.bitcoin
 # ReadWritePaths=/var/log
 # CPU and memory limits to prevent system overload
-CPUQuota=80%
+CPUQuota=90%
 MemoryMax=2G
 # Nice level (priority)
 Nice=10

@@ -2,7 +2,7 @@
   "_comment_mining": "Number of CPU threads - RPi5 has 4 cores. Use 2 for low power/24-7 operation, 4 for maximum performance",
   "mining": {
     "threads": 4,
-    "priority": 10
+    "priority": 0
   },
   
   "_comment_priority": "Process priority (0-20, higher = lower priority). Use 19 for 24/7 operation (lowest priority), 0 for maximum performance",

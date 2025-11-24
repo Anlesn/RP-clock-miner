@@ -296,7 +296,7 @@ TELEGRAM_CHAT_ID=your_chat_id_here
 {
   "mining": {
     "threads": 4,        // CPU threads (2-4 recommended)
-    "priority": 10       // Process priority
+    "priority": 0       // Process priority, 0 -- top priority
   },
   "monitoring": {
     "temperature_critical": 80  // Critical temp in °C
