@@ -21,8 +21,8 @@
   
   "_comment_monitoring": "Temperature thresholds in Celsius for warnings and critical alerts",
   "monitoring": {
-    "temperature_warning": 70,
-    "temperature_critical": 80
+    "temperature_warning": 80,
+    "temperature_critical": 90
   },
   
   "_comment_telegram": "Telegram notifications interval in minutes (30 = every 30 minutes). Set to 0 to disable",

@@ -120,8 +120,8 @@ check_temperature() {
         TEMP_WARNING=$(grep -o '"temperature_warning":[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*$' || echo "70")
         TEMP_CRITICAL=$(grep -o '"temperature_critical":[[:space:]]*[0-9]*' "$CONFIG_FILE" | grep -o '[0-9]*$' || echo "80")
     else
-        TEMP_WARNING=70
-        TEMP_CRITICAL=80
+        TEMP_WARNING=80
+        TEMP_CRITICAL=90
     fi
     
     # Check if temperature is critical
