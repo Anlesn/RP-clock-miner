@@ -72,29 +72,46 @@ get_stats() {
     # Mining status
     # Check if cpuminer process is running
     if pgrep -f "cpuminer" > /dev/null 2>&1; then
-        # Try to get hashrate from API
-        MINER_API=$(curl -s http://127.0.0.1:4048/summary 2>/dev/null)
+        # cpuminer API uses plain text protocol (not HTTP)
+        # Format: KHS=12484.26;ACC=0;REJ=0;TEMP=51.2
+        if command -v nc >/dev/null 2>&1; then
+            MINER_API=$(echo "" | nc -w 1 127.0.0.1 4048 2>/dev/null)
+        else
+            MINER_API=""
+        fi
+        
         if [ -n "$MINER_API" ]; then
-            HASHRATE=$(echo "$MINER_API" | grep -o '"KHS":[0-9.]*' | cut -d: -f2)
-            if [ -n "$HASHRATE" ] && [ "$HASHRATE" != "0" ]; then
-                # API responds with hashrate - actively mining
-                HASHRATE="${HASHRATE} KH/s"
+            # Parse KHS (kilohash per second) from response
+            HASHRATE_KHS=$(echo "$MINER_API" | grep -o "KHS=[0-9.]*" | cut -d= -f2)
+            
+            if [ -n "$HASHRATE_KHS" ] && [ "$HASHRATE_KHS" != "0" ]; then
+                # Convert KH/s to MH/s for readability
+                HASHRATE_MHS=$(awk "BEGIN {printf \"%.2f\", $HASHRATE_KHS / 1000}")
+                
+                # Get number of threads from config
+                THREADS=$(grep -o '"threads":[[:space:]]*[0-9]*' "$PROJECT_DIR/miner/config.json" | grep -o '[0-9]*' || echo "4")
+                
+                HASHRATE="${HASHRATE_MHS} MH/s (${THREADS} threads)"
                 MINER_STATUS="✅ Mining"
             else
-                # API responds but no hashrate - waiting for sync
                 HASHRATE="N/A"
                 MINER_STATUS="⏸️ Waiting for sync"
             fi
         else
-            # API not responding - check if blockchain is synced
-            if [ "$SYNC_PERCENT" != "N/A" ] && [ "$SYNC_PERCENT" -lt 100 ]; then
-                # Not synced - waiting is expected
+            # Fallback: parse from journal logs
+            RECENT_HASHRATE=$(journalctl -u rp-clock-miner --since "5 minutes ago" -n 50 2>/dev/null | \
+                             grep "Miner TTF @" | tail -1 | \
+                             grep -o "[0-9.]*\s*MH/s" | head -1)
+            
+            if [ -n "$RECENT_HASHRATE" ]; then
+                HASHRATE="$RECENT_HASHRATE"
+                MINER_STATUS="✅ Mining"
+            elif [ "$SYNC_PERCENT" != "N/A" ] && [ "$SYNC_PERCENT" -lt 100 ]; then
                 HASHRATE="N/A"
                 MINER_STATUS="⏸️ Waiting for sync"
             else
-                # Synced but API not responding - this is odd
                 HASHRATE="N/A"
-                MINER_STATUS="⚠️ Running (no API)"
+                MINER_STATUS="⚠️ Running (no data)"
             fi
         fi
         
@@ -175,6 +192,7 @@ format_message() {
 Status: ${MINER_STATUS}
 Hashrate: ${HASHRATE}
 Runtime: ${MINER_RUNTIME}
+<i>Note: Hashrate is total across all CPU threads</i>
 
 <b>⛓️ Bitcoin Core:</b>
 Status: ${BITCOIN_STATUS}
