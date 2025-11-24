@@ -67,7 +67,10 @@ TimeoutStopSec=60
 # ReadWritePaths=HOME_DIR_PLACEHOLDER/.bitcoin
 # ReadWritePaths=/var/log
 # CPU and memory limits to prevent system overload
-CPUQuota=90%
+# CPUQuota is per-process, not per-core
+# For 4 threads: 360% = 90% per core, 400% = 100% per core
+# Leaving some headroom: 380% = 95% per core
+CPUQuota=380%
 MemoryMax=2G
 # Nice level (priority)
 Nice=10
