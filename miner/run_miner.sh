@@ -229,7 +229,7 @@ if is_solo_mode; then
     DIFFICULTY=$(bitcoin-cli getmininginfo | grep -o '"difficulty":[[:space:]]*[0-9.e+]*' | grep -o '[0-9.e+]*$')
     echo "  Difficulty: $DIFFICULTY"
 else
-    echo "  Pool: $POOL_URL (share diff tier: $POOL_TIER)"
+    echo "  Pool: $POOL_NAME — $POOL_URL (share diff: $POOL_DIFF_LABEL)"
 fi
 echo "  Your approximate hashrate: ~10-50 MH/s"
 echo "  Probability of finding a block: ~0.0000000001% per day 🎲"

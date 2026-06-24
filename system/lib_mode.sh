@@ -34,7 +34,10 @@ MINING_MODE="${MINING_MODE:-$(_cfg mode)}"
 MINING_MODE="${MINING_MODE:-solo}"
 
 # Pool connection params (only meaningful when mode=pool). .env overrides:
-# POOL_REGION (eu|us), POOL_TIER (low|mid|high), POOL_WORKER_ID.
+# POOL_PROVIDER (solopool|ckpool), POOL_REGION (eu|us), POOL_TIER (low|mid|high),
+# POOL_WORKER_ID.
+POOL_PROVIDER="${POOL_PROVIDER:-$(_cfg provider)}"
+POOL_PROVIDER="${POOL_PROVIDER:-solopool}"
 POOL_REGION="${POOL_REGION:-$(_cfg region)}"
 POOL_REGION="${POOL_REGION:-eu}"
 POOL_TIER="${POOL_TIER:-$(_cfg tier)}"
@@ -42,16 +45,30 @@ POOL_TIER="${POOL_TIER:-low}"
 POOL_WORKER_ID="${POOL_WORKER_ID:-$(_cfg worker_id)}"
 POOL_WORKER_ID="${POOL_WORKER_ID:-rpi5}"
 
-# SoloPool.org endpoints (see https://btc.solopool.org/help)
-case "$POOL_REGION" in
-    us|usa|US) POOL_HOST="us1.solopool.org" ;;
-    *)         POOL_HOST="eu3.solopool.org" ;;
-esac
-# Port selects share difficulty. RPi5 hashes ~10-50 MH/s -> low (250K).
-case "$POOL_TIER" in
-    high) POOL_PORT=9005 ;;   # 10M share diff, 100+ rigs
-    mid)  POOL_PORT=7005 ;;   # 1M share diff, 25+ rigs
-    *)    POOL_PORT=8005 ;;   # 250K share diff, low-end hardware
+case "$POOL_PROVIDER" in
+    ckpool|ck)
+        # CKPool solo (https://solo.ckpool.org). Single global endpoint with
+        # vardiff — share difficulty auto-adapts to hashrate, so even a low-power
+        # CPU submits shares regularly and shows up on the pool dashboard.
+        POOL_NAME="CKPool Solo"
+        POOL_HOST="solo.ckpool.org"
+        POOL_PORT=3333
+        POOL_DIFF_LABEL="vardiff (auto)"
+        ;;
+    *)
+        # SoloPool.org endpoints (see https://btc.solopool.org/help)
+        POOL_NAME="SoloPool.org"
+        case "$POOL_REGION" in
+            us|usa|US) POOL_HOST="us1.solopool.org" ;;
+            *)         POOL_HOST="eu3.solopool.org" ;;
+        esac
+        # Port selects share difficulty. RPi5 hashes ~10-50 MH/s -> low (250K).
+        case "$POOL_TIER" in
+            high) POOL_PORT=9005; POOL_DIFF_LABEL="10M (high)" ;;
+            mid)  POOL_PORT=7005; POOL_DIFF_LABEL="1M (mid)" ;;
+            *)    POOL_PORT=8005; POOL_DIFF_LABEL="250K (low)" ;;
+        esac
+        ;;
 esac
 POOL_URL="stratum+tcp://${POOL_HOST}:${POOL_PORT}"
 

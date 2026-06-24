@@ -217,15 +217,10 @@ get_stats() {
     # Work-source section: own node (solo) vs pool (pool). Built here so the
     # Telegram message shows the relevant block instead of a wall of N/A.
     if is_pool_mode; then
-        case "$POOL_TIER" in
-            high) TIER_LABEL="10M (high)" ;;
-            mid)  TIER_LABEL="1M (mid)" ;;
-            *)    TIER_LABEL="250K (low)" ;;
-        esac
-        WORK_SOURCE_SECTION="<b>🌐 Pool (SoloPool.org):</b>
+        WORK_SOURCE_SECTION="<b>🌐 Pool (${POOL_NAME}):</b>
 Status: ✅ Connected
 Server: ${POOL_HOST}:${POOL_PORT}
-Share diff: ${TIER_LABEL}
+Share diff: ${POOL_DIFF_LABEL}
 Worker: ${POOL_WORKER_ID}"
     else
         WORK_SOURCE_SECTION="<b>⛓️ Bitcoin Core:</b>
