@@ -6,8 +6,18 @@
   },
   
   "_comment_priority": "Process priority (0-20, higher = lower priority). Use 19 for 24/7 operation (lowest priority), 0 for maximum performance",
-  
-  "_comment_bitcoind": "These will be overridden by .env values (BITCOIN_RPC_USER and BITCOIN_RPC_PASSWORD)",
+
+  "_comment_mode": "Mining mode. 'solo' = own local bitcoind node via RPC (full sovereignty, needs full blockchain sync). 'pool' = SoloPool.org via Stratum (no local node, trustless coinbase). Override with .env MINING_MODE.",
+  "mode": "solo",
+
+  "_comment_pool": "Used only when mode='pool'. region: eu|us. tier: low|mid|high -> share difficulty 250K/1M/10M (port 8005/7005/9005). For RPi5 (~10-50 MH/s) use tier='low'. worker_id: label for pool stats (letters/numbers/_/-, max 32). Reward address comes from .env BITCOIN_MINING_ADDRESS.",
+  "pool": {
+    "region": "eu",
+    "tier": "low",
+    "worker_id": "rpi5"
+  },
+
+  "_comment_bitcoind": "Used only when mode='solo'. These will be overridden by .env values (BITCOIN_RPC_USER and BITCOIN_RPC_PASSWORD)",
   "bitcoind": {
     "user": "PLACEHOLDER",
     "password": "PLACEHOLDER"

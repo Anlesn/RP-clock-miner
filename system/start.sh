@@ -50,28 +50,34 @@ else
     exit 1
 fi
 
-# 3. Check if Bitcoin Core is already running (from health check)
-if ! pgrep -f "bitcoind" > /dev/null; then
-    log "Starting Bitcoin Core..."
-    bitcoind -daemon
-    
-    # More robust wait with timeout
-    timeout=120
-    elapsed=0
-    while ! bitcoin-cli getblockchaininfo > /dev/null 2>&1; do
-        if [ $elapsed -ge $timeout ]; then
-            log "ERROR: Bitcoin Core failed to start within ${timeout}s"
-            exit 1
-        fi
-        sleep 2
-        ((elapsed+=2))
-        if [ $((elapsed % 10)) -eq 0 ]; then
-            log "Waiting for Bitcoin Core... ${elapsed}s"
-        fi
-    done
-fi
+# 2b. Resolve mining mode (solo = local node, pool = SoloPool.org Stratum)
+source "$SCRIPT_DIR/lib_mode.sh"
 
-log "Bitcoin Core is ready"
+# 3. Start Bitcoin Core — solo mode only. Pool mode needs no local node.
+if is_solo_mode; then
+    if ! pgrep -f "bitcoind" > /dev/null; then
+        log "Starting Bitcoin Core..."
+        bitcoind -daemon
+
+        # More robust wait with timeout
+        timeout=120
+        elapsed=0
+        while ! bitcoin-cli getblockchaininfo > /dev/null 2>&1; do
+            if [ $elapsed -ge $timeout ]; then
+                log "ERROR: Bitcoin Core failed to start within ${timeout}s"
+                exit 1
+            fi
+            sleep 2
+            ((elapsed+=2))
+            if [ $((elapsed % 10)) -eq 0 ]; then
+                log "Waiting for Bitcoin Core... ${elapsed}s"
+            fi
+        done
+    fi
+    log "Bitcoin Core is ready"
+else
+    log "Pool mode ($POOL_URL) — skipping local Bitcoin Core startup"
+fi
 
 # 4. Use display configuration from health_check environment variables
 # DISPLAY_TYPE is exported by health_check.sh if available

@@ -49,7 +49,16 @@ RPC_PASS=${BITCOIN_RPC_PASSWORD:-$RPC_PASS}
 COINBASE_ADDR=${BITCOIN_MINING_ADDRESS:-$COINBASE_ADDR}
 # Note: THREADS and other settings come from config.json only
 
-# Check if Bitcoin Core is running
+# Resolve mining mode (solo = local node via RPC, pool = SoloPool.org Stratum)
+source "$(dirname "$0")/../system/lib_mode.sh"
+if is_pool_mode; then
+    echo -e "${BLUE}[*] Mining mode: POOL — ${POOL_URL} (worker ${COINBASE_ADDR}.${POOL_WORKER_ID})${NC}"
+else
+    echo -e "${BLUE}[*] Mining mode: SOLO — local node on 127.0.0.1:8332${NC}"
+fi
+
+# Check if Bitcoin Core is running (solo mode only — pool mode has no local node)
+if is_solo_mode; then
 echo -e "${YELLOW}[*] Checking Bitcoin Core status...${NC}"
 if bitcoin-cli getblockchaininfo >/dev/null 2>&1; then
     # Get current blockchain sync status
@@ -106,6 +115,7 @@ else
     echo -e "    Start it with: bitcoind -daemon"
     exit 1
 fi
+fi  # end is_solo_mode (Bitcoin Core status check)
 
 # Check mining address configuration
 echo -e "${YELLOW}[*] Checking mining address...${NC}"
@@ -212,14 +222,42 @@ echo "  Memory: $(free -h | awk '/^Mem:/ {print $2}')"
 # vcgencmd is RPi specific command for temperature
 echo "  Temperature: $(vcgencmd measure_temp 2>/dev/null | cut -d'=' -f2 || echo "N/A")"
 
-# Show network mining difficulty
+# Show network mining info
 echo
 echo -e "${BLUE}Network Info:${NC}"
-DIFFICULTY=$(bitcoin-cli getmininginfo | grep -o '"difficulty":[[:space:]]*[0-9.e+]*' | grep -o '[0-9.e+]*$')
-echo "  Difficulty: $DIFFICULTY"
+if is_solo_mode; then
+    DIFFICULTY=$(bitcoin-cli getmininginfo | grep -o '"difficulty":[[:space:]]*[0-9.e+]*' | grep -o '[0-9.e+]*$')
+    echo "  Difficulty: $DIFFICULTY"
+else
+    echo "  Pool: $POOL_URL (share diff tier: $POOL_TIER)"
+fi
 echo "  Your approximate hashrate: ~10-50 MH/s"
 echo "  Probability of finding a block: ~0.0000000001% per day 🎲"
 echo
+
+# Don't mine during initial block download (solo mode only).
+# While syncing, Bitcoin Core refuses to hand out work, so cpuminer hashes at
+# 0 H/s anyway — but 4 saturated cores starve bitcoind's block validation and
+# network softirqs, which slows the sync (and drops packets / SSH). Wait until
+# the node is fully synced, leaving all CPU to bitcoind.
+# In pool mode there is no local node — the pool serves work immediately.
+if is_solo_mode; then
+echo -e "${YELLOW}[*] Verifying node is fully synced before mining...${NC}"
+while true; do
+    IBD=$(bitcoin-cli getblockchaininfo 2>/dev/null \
+          | grep -o '"initialblockdownload":[[:space:]]*[a-z]*' \
+          | grep -o '[a-z]*$' || true)
+    if [ "$IBD" = "false" ]; then
+        echo -e "${GREEN}[✓] Node fully synced — starting miner${NC}"
+        break
+    fi
+    BLOCKS=$(bitcoin-cli getblockcount 2>/dev/null || echo "?")
+    HEADERS=$(bitcoin-cli getblockchaininfo 2>/dev/null \
+              | grep -o '"headers":[[:space:]]*[0-9]*' | grep -o '[0-9]*$' || echo "?")
+    echo -e "${YELLOW}[$(date '+%H:%M:%S')] Still syncing (${BLOCKS}/${HEADERS}) — miner paused to free CPU. Recheck in 60s${NC}"
+    sleep 60
+done
+fi
 
 # Start mining
 echo -e "${GREEN}[*] Starting solo mining...${NC}"
@@ -236,22 +274,39 @@ echo "────────────────────────�
 # --api-bind: API for monitoring on port 4048
 # Note: Using 'nice' for process priority instead of deprecated --cpu-priority
 
-# Start cpuminer in background, filtering noise during sync
-nice -n ${PRIORITY:-10} ./cpuminer \
-    -a sha256d \
-    -o http://127.0.0.1:8332 \
-    -u "$RPC_USER" \
-    -p "$RPC_PASS" \
-    --coinbase-addr="$COINBASE_ADDR" \
-    --coinbase-sig="$COINBASE_MSG" \
-    -t "$THREADS" \
-    --api-bind 127.0.0.1:4048 2>&1 | \
-    grep -v "json_rpc_call failed" &
+# Launch cpuminer. Solo: connect to local node RPC and build our own coinbase.
+# Pool: connect to SoloPool.org via Stratum; the pool builds the block and pays
+# the reward directly to the address used as the Stratum username.
+if is_solo_mode; then
+    # Filter the json_rpc noise that local RPC emits during sync
+    nice -n ${PRIORITY:-10} ./cpuminer \
+        -a sha256d \
+        -o http://127.0.0.1:8332 \
+        -u "$RPC_USER" \
+        -p "$RPC_PASS" \
+        --coinbase-addr="$COINBASE_ADDR" \
+        --coinbase-sig="$COINBASE_MSG" \
+        -t "$THREADS" \
+        --api-bind 127.0.0.1:4048 2>&1 | \
+        grep -v "json_rpc_call failed" &
+else
+    nice -n ${PRIORITY:-10} ./cpuminer \
+        -a sha256d \
+        -o "$POOL_URL" \
+        -u "${COINBASE_ADDR}.${POOL_WORKER_ID}" \
+        -p x \
+        -t "$THREADS" \
+        --api-bind 127.0.0.1:4048 &
+fi
 
 CPUMINER_PID=$!
 echo ""
 echo "[INFO] cpuminer started (PID: $CPUMINER_PID)"
 echo ""
+
+# Pool mode has no local node to monitor — just keep cpuminer in the foreground.
+# Solo mode below tracks node sync/RPC health while mining.
+if is_solo_mode; then
 
 # Monitor sync status and RPC health
 # Use jq for reliable JSON parsing, fallback to grep if jq not available
@@ -342,6 +397,10 @@ else
     echo "[INFO] Blockchain already synced - mining actively!"
     echo "[INFO] Monitoring cpuminer process..."
 fi
+
+else
+    echo "[INFO] Pool mining via $POOL_URL — monitoring cpuminer process..."
+fi  # end is_solo_mode (post-launch monitoring)
 
 # Wait for cpuminer to exit
 wait $CPUMINER_PID

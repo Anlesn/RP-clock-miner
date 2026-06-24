@@ -18,6 +18,9 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
+# Resolve mining mode (solo = local node, pool = SoloPool.org Stratum)
+source "$SCRIPT_DIR/lib_mode.sh"
+
 # Function to check if a process is running
 is_running() {
     pgrep -f "$1" > /dev/null 2>&1
@@ -72,7 +75,19 @@ check_bitcoin_core() {
     local blocks=$(bitcoin-cli getblockcount 2>/dev/null || echo "0")
     local headers=$(bitcoin-cli getblockchaininfo 2>/dev/null | grep -o '"headers":[[:space:]]*[0-9]*' | grep -o '[0-9]*$' || echo "0")
     log "Blockchain status: $blocks/$headers blocks"
-    
+
+    return 0
+}
+
+# Function to check pool reachability (pool mode). Non-fatal: a flaky Pi network
+# may recover, and cpuminer retries Stratum on its own.
+check_pool() {
+    log "Pool mode — target $POOL_URL"
+    if timeout 5 bash -c "exec 3<>/dev/tcp/$POOL_HOST/$POOL_PORT" 2>/dev/null; then
+        log "Pool reachable ($POOL_HOST:$POOL_PORT)"
+    else
+        log "WARNING: Pool $POOL_HOST:$POOL_PORT not reachable yet — miner will retry"
+    fi
     return 0
 }
 
@@ -186,10 +201,14 @@ main() {
     # 4. Check temperature
     check_temperature
     
-    # 5. Check and start Bitcoin Core
-    if ! check_bitcoin_core; then
-        log "ERROR: Bitcoin Core health check failed"
-        exit 1
+    # 5. Check work source: local node (solo) or pool reachability (pool)
+    if is_solo_mode; then
+        if ! check_bitcoin_core; then
+            log "ERROR: Bitcoin Core health check failed"
+            exit 1
+        fi
+    else
+        check_pool
     fi
     
     # 6. Check display

@@ -19,6 +19,9 @@ echo
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 USER=$(whoami)
 
+# Resolve mining mode (solo = local node, pool = SoloPool.org Stratum)
+source "$PROJECT_DIR/system/lib_mode.sh"
+
 # 1. Make all scripts executable
 echo -e "${YELLOW}[*] Setting script permissions...${NC}"
 chmod +x "$PROJECT_DIR/system"/*.sh
@@ -103,9 +106,10 @@ if [ "$TELEGRAM_INTERVAL" -gt 0 ]; then
     echo "[✓] Telegram stats: every ${TELEGRAM_INTERVAL} minutes"
 fi
 
-# 7. Enable Bitcoin Core autostart
-echo -e "${YELLOW}[*] Configuring Bitcoin Core autostart...${NC}"
-cat > /tmp/bitcoind.service << EOF
+# 7. Enable Bitcoin Core autostart (solo mode only — pool mode has no local node)
+if is_solo_mode; then
+    echo -e "${YELLOW}[*] Configuring Bitcoin Core autostart...${NC}"
+    cat > /tmp/bitcoind.service << EOF
 [Unit]
 Description=Bitcoin Core Daemon
 After=network.target
@@ -122,9 +126,16 @@ Group=$USER
 WantedBy=multi-user.target
 EOF
 
-sudo cp /tmp/bitcoind.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable bitcoind
+    sudo cp /tmp/bitcoind.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable bitcoind
+else
+    echo -e "${YELLOW}[*] Pool mode — skipping Bitcoin Core service (no local node)${NC}"
+    # Remove a stale bitcoind service from a previous solo install, if present
+    if systemctl list-unit-files 2>/dev/null | grep -q '^bitcoind\.service'; then
+        sudo systemctl disable bitcoind 2>/dev/null || true
+    fi
+fi
 
 # 8. Create startup verification script
 echo -e "${YELLOW}[*] Creating verification script...${NC}"

@@ -10,6 +10,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 ALERT_FILE="/tmp/rp-miner-alert"
 
+# Resolve mining mode (solo = local node, pool = SoloPool.org Stratum)
+source "$SCRIPT_DIR/lib_mode.sh"
+
 # Function to log (logs go to syslog/journalctl)
 log() {
     logger -t rp-clock-miner-monitor "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
@@ -66,16 +69,22 @@ if [ "$disk_usage" -gt $DISK_WARNING_PERCENT ]; then
     send_alert "Low disk space: ${disk_usage}% used (threshold: ${DISK_WARNING_PERCENT}%)"
 fi
 
-# Check if Bitcoin Core is responsive
-if pgrep -f "bitcoind" > /dev/null; then
-    if ! timeout 10 bitcoin-cli getblockcount > /dev/null 2>&1; then
-        log "WARNING: Bitcoin Core not responding"
-        send_alert "Bitcoin Core is running but not responding"
+# Check if Bitcoin Core is responsive (solo mode only — pool mode has no node)
+if is_solo_mode; then
+    if pgrep -f "bitcoind" > /dev/null; then
+        if ! timeout 10 bitcoin-cli getblockcount > /dev/null 2>&1; then
+            log "WARNING: Bitcoin Core not responding"
+            send_alert "Bitcoin Core is running but not responding"
+        fi
     fi
 fi
 
 # Log current status
-blocks=$(bitcoin-cli getblockcount 2>/dev/null || echo "Unknown")
+if is_solo_mode; then
+    blocks=$(bitcoin-cli getblockcount 2>/dev/null || echo "Unknown")
+else
+    blocks="pool:${POOL_HOST}"
+fi
 hashrate=$(curl -s http://127.0.0.1:4048/summary 2>/dev/null | grep -o '"KHS":[0-9.]*' | cut -d: -f2 || echo "0")
 
 log "Status: Blocks=$blocks, Hashrate=${hashrate}KH/s, Temp=${temp}°C, Disk=${disk_usage}%"

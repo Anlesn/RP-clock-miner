@@ -19,6 +19,14 @@ if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
     exit 0
 fi
 
+# Resolve mining mode. This detector scans the local node's debug.log, which
+# only exists in solo mode. In pool mode SoloPool.org detects the found block
+# server-side; the win shows up as the address balance in telegram_stats.
+source "$SCRIPT_DIR/lib_mode.sh"
+if is_pool_mode; then
+    exit 0
+fi
+
 # Track file to remember last checked position
 STATE_FILE="/tmp/rp-miner-block-check-state"
 BITCOIN_LOG="$HOME/.bitcoin/debug.log"
