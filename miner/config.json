@@ -10,7 +10,7 @@
   "_comment_mode": "Mining mode. 'solo' = own local bitcoind node via RPC (full sovereignty, needs full blockchain sync). 'pool' = SoloPool.org via Stratum (no local node, trustless coinbase). Override with .env MINING_MODE.",
   "mode": "solo",
 
-  "_comment_pool": "Used only when mode='pool'. provider: 'solopool' (fixed share diff, region/tier below) or 'ckpool' (solo.ckpool.org, vardiff — auto-adapts to hashrate, shows stats for weak miners; ignores region/tier). region: eu|us. tier: low|mid|high -> share difficulty 250K/1M/10M (port 8005/7005/9005); for RPi5 use 'low'. worker_id: label for pool stats. Reward address comes from .env BITCOIN_MINING_ADDRESS.",
+  "_comment_pool": "Used only when mode='pool'. provider: 'solopool' (fixed share diff, region+tier) or 'ckpool' (CKPool solo, vardiff — auto-adapts to hashrate, shows stats for weak miners). region: eu|us (ckpool also asia/oceania) — picks the SoloPool location or the CKPool regional sibling (eu=eusolo, us=solo, asia=sgsolo, oceania=ausolo). tier (solopool only): low|mid|high -> 250K/1M/10M (port 8005/7005/9005); for RPi5 use 'low'. worker_id: label for pool stats. Reward address comes from .env BITCOIN_MINING_ADDRESS.",
   "pool": {
     "provider": "solopool",
     "region": "eu",

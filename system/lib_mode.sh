@@ -47,13 +47,19 @@ POOL_WORKER_ID="${POOL_WORKER_ID:-rpi5}"
 
 case "$POOL_PROVIDER" in
     ckpool|ck)
-        # CKPool solo (https://solo.ckpool.org). Single global endpoint with
-        # vardiff — share difficulty auto-adapts to hashrate, so even a low-power
-        # CPU submits shares regularly and shows up on the pool dashboard.
+        # CKPool solo (https://solo.ckpool.org). Vardiff (min 10K) — difficulty
+        # auto-adapts to hashrate so even a low-power miner eventually shows on
+        # the dashboard. Pick the regional sibling by POOL_REGION for lower
+        # latency (less stale work). Shares are cosmetic; odds are unchanged.
         POOL_NAME="CKPool Solo"
-        POOL_HOST="solo.ckpool.org"
         POOL_PORT=3333
-        POOL_DIFF_LABEL="vardiff (auto)"
+        POOL_DIFF_LABEL="vardiff (auto, min 10K)"
+        case "$POOL_REGION" in
+            us|usa|US|americas) POOL_HOST="solo.ckpool.org" ;;   # Americas
+            asia|sg|me)         POOL_HOST="sgsolo.ckpool.org" ;;  # Asia/Middle East
+            oceania|au|nz)      POOL_HOST="ausolo.ckpool.org" ;;  # Oceania
+            *)                  POOL_HOST="eusolo.ckpool.org" ;;  # Europe/Africa (default)
+        esac
         ;;
     *)
         # SoloPool.org endpoints (see https://btc.solopool.org/help)
